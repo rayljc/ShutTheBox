@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Register">
+
+    <TextView
+        android:id="@+id/createAccountTextView"
+        android:layout_width="266dp"
+        android:layout_height="59dp"
+        android:layout_marginStart="65dp"
+        android:layout_marginTop="150dp"
+        android:layout_marginEnd="65dp"
+        android:layout_marginBottom="50dp"
+        android:text="@string/create_an_account"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/createAccountEmailEditText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.466"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/createAccountEmailEditText"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginBottom="10dp"
+        android:ems="10"
+        android:hint="@string/email"
+        android:importantForAutofill="no"
+        android:inputType="textEmailAddress"
+        app:layout_constraintBottom_toTopOf="@+id/createAccountPasswordEditText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAccountTextView" />
+
+    <EditText
+        android:id="@+id/createAccountPasswordEditText"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginBottom="10dp"
+        android:ems="10"
+        android:hint="@string/password"
+        android:importantForAutofill="no"
+        android:inputType="textPassword"
+        app:layout_constraintBottom_toTopOf="@+id/createAccountNameEditText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAccountEmailEditText" />
+
+    <EditText
+        android:id="@+id/createAccountNameEditText"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="56dp"
+        android:layout_marginBottom="20dp"
+        android:ems="10"
+        android:hint="@string/display_name"
+        android:importantForAutofill="no"
+        android:inputType="textPersonName"
+        app:layout_constraintBottom_toTopOf="@+id/registerButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAccountPasswordEditText" />
+
+    <Button
+        android:id="@+id/registerButton"
+        android:layout_width="279dp"
+        android:layout_height="42dp"
+        android:layout_marginStart="80dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="80dp"
+        android:layout_marginBottom="50dp"
+        android:text="@string/register"
+        app:layout_constraintBottom_toTopOf="@+id/back_to_login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/createAccountNameEditText" />
+
+    <TextView
+        android:id="@+id/back_to_login"
+        android:layout_width="269dp"
+        android:layout_height="21dp"
+        android:layout_marginStart="70dp"
+        android:layout_marginTop="80dp"
+        android:layout_marginEnd="70dp"
+        android:layout_marginBottom="109dp"
+        android:text="@string/already_have_an_account_login_here"
+        android:textAlignment="center"
+        android:textColor="#FF5722"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/registerButton" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
