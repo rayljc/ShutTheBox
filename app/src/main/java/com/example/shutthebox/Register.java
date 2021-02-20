@@ -40,13 +40,17 @@ public class Register extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        email = findViewById(R.id.emailEditText);
-        password = findViewById(R.id.passwordEditText);
+        email = findViewById(R.id.createAccountEmailEditText);
+        password = findViewById(R.id.createAccountPasswordEditText);
         displayName = findViewById(R.id.createAccountNameEditText);
         backToLogin = findViewById(R.id.back_to_login);
         registerButton = findViewById(R.id.registerButton);
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
+
+        if (firebaseAuth.getCurrentUser() != null) {
+            firebaseAuth.signOut();
+        }
 
         registerButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,14 +61,17 @@ public class Register extends AppCompatActivity {
 
                 if (TextUtils.isEmpty(_email)) {
                     email.setError("Email is required!");
+                    return;
                 }
 
                 if (_password.length() < 8) {
                     password.setError("Password must be at least 8 digits!");
+                    return;
                 }
 
                 if (TextUtils.isEmpty(_displayName)) {
                     displayName.setError("Display name is required!");
+                    return;
                 }
 
                 firebaseAuth.createUserWithEmailAndPassword(_email, _password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
@@ -101,13 +108,13 @@ public class Register extends AppCompatActivity {
                                     Log.d(TAG, "Failed to save user profile: " + e.getMessage());
                                 }
                             });
-
-                            startActivity(new Intent(getApplicationContext(), Lobby.class));
                         } else {
-                            Toast.makeText(Register.this, "Failed to create user: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Register.this, "Failed to create user: ", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
+
+                startActivity(new Intent(getApplicationContext(), MainActivity.class));
             }
         });
 

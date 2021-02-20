@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "128478141217",
+    "project_id": "shutthebox-45495",
+    "storage_bucket": "shutthebox-45495.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:128478141217:android:8a9af849dd4b821e14fc60",
+        "android_client_info": {
+          "package_name": "com.example.shutthebox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "128478141217-u4vfn8g8ihct2v4drohusbvqaf1g2eq5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdMTpDgODHAvBdRgwUMlhKjiD4JO7s9wM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "128478141217-u4vfn8g8ihct2v4drohusbvqaf1g2eq5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

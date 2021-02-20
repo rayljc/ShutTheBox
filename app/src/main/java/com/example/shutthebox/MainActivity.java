@@ -45,16 +45,19 @@ public class MainActivity extends AppCompatActivity {
 
                 if (TextUtils.isEmpty(_email)) {
                     email.setError("Email is required!");
+                    return;
                 }
 
                 if (_password.length() < 8) {
                     password.setError("Password must be at least 8 digits!");
+                    return;
                 }
 
                 firebaseAuth.signInWithEmailAndPassword(_email, _password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            Log.d(TAG, "Login success");
                             startActivity(new Intent(getApplicationContext(), Lobby.class));
                         } else {
                             Log.d(TAG, "Login Failed: " + task.getException().getMessage());
