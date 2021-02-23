@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.shutthebox.model.Player;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -22,9 +23,6 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class Register extends AppCompatActivity {
 
@@ -94,9 +92,11 @@ public class Register extends AppCompatActivity {
                             Toast.makeText(Register.this, "User Created.", Toast.LENGTH_SHORT).show();
                             String userID = firebaseUser.getUid();
                             DocumentReference documentReference = firebaseFirestore.collection("users").document(userID);
-                            Map<String, Object> userProfile = new HashMap<>();
-                            userProfile.put("email", _email);
-                            userProfile.put("display_name", _displayName);
+//                            Map<String, Object> userProfile = new HashMap<>();
+//                            userProfile.put("email", _email);
+//                            userProfile.put("display_name", _displayName);
+//                            userProfile.put("ready", 0);  // 0 for "not ready", 1 for "ready", may extend states from 2 in the future
+                            Player userProfile = new Player(_email, _displayName, 0);
                             documentReference.set(userProfile).addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override
                                 public void onSuccess(Void aVoid) {

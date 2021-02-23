@@ -1,0 +1,7 @@
+New Features:
+(1) Finish the data modeling. See package com.example.shutthebox.model
+(2) Lobby page now can grab and display the room info from Firestore. (Room 1)
+(3) For game room 2 in Lobby, we won't implement it now since the code will be highly duplicated.
+We may consider to use the Recycler view and let users to create a new room in the future.
+(4) Room 1 in Lobby now can listen to the data change in Firestore and display the updated data.
+(5) Users now can shake their phone and roll the dice in Game activity.

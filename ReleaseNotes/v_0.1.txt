@@ -1,0 +1,8 @@
+Features:
+(1) All core pages (activities and layout) done
+(2) Login (Main activity) / Register feature done
+(3) Hardcoded view in Lobby
+(4) Hardcoded view in GameRoom
+(5) Hardcoded view in Game. But users can mark the wooden cards or roll the dice as they wish
+(6) Hardcoded view in PostGame
+(7) Finish the workflow using intent

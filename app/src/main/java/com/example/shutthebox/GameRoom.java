@@ -9,12 +9,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 public class GameRoom extends AppCompatActivity {
 
     private static final String TAG = "TAG_GAME_ROOM";
     private static final String GAME_ROOM_ID = "GAME_ROOM_ID";
     TextView gameRoomNumberText;
     Button readyButton, startGameButton, leaveRoomButton;
+    FirebaseFirestore firebaseFirestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,9 +29,13 @@ public class GameRoom extends AppCompatActivity {
         readyButton = findViewById(R.id.room_ready_button);
         startGameButton = findViewById(R.id.room_start_button);
         leaveRoomButton = findViewById(R.id.room_leave_button);
+        firebaseFirestore = FirebaseFirestore.getInstance();
 
         String _game_room_number = "Game room " + getIntent().getExtras().getString("game_room_number", "zero");
         gameRoomNumberText.setText(_game_room_number);
+
+        CollectionReference collectionReference = firebaseFirestore.collection("rooms");
+
 
         readyButton.setOnClickListener(new View.OnClickListener() {
             @Override
