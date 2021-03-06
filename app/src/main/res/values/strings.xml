@@ -42,4 +42,5 @@
     <string name="go_to_lobby">Go to lobby</string>
     <string name="time_to_push_ups">Time to push ups!</string>
     <string name="roll_me">Roll me</string>
+    <string name="add_string">Add</string>
 </resources>

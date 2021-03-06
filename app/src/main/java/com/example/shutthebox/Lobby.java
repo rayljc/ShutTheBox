@@ -14,6 +14,7 @@ import android.widget.TextView;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
@@ -33,19 +34,24 @@ public class Lobby extends AppCompatActivity {
     private static final String TAG = "TAG_LOBBY";
     private static final String GAME_ROOM_NO = "game_room_number";
     Button joinRoomOneButton, joinRoomTwoButton, switchAccountButton;
+    Button testAddButton;
+    FirebaseAuth firebaseAuth;
     FirebaseFirestore firebaseFirestore;
     TextView roomTitle_1, roomName_1, roomCurrentPlayers_1, roomAvailable_1;
     TextView roomTitle_2, roomName_2, roomCurrentPlayers_2, roomAvailable_2;
+    Player player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lobby);
 
+        firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
         joinRoomOneButton = findViewById(R.id.join_room_1_button);
         joinRoomTwoButton = findViewById(R.id.join_room_2_button);
         switchAccountButton = findViewById(R.id.lobby_switch_account_button);
+        testAddButton = findViewById(R.id.test_add_button);
 
         roomTitle_1 = findViewById(R.id.game_room_1_title);
         roomName_1 = findViewById(R.id.game_room_1_name);
@@ -55,6 +61,17 @@ public class Lobby extends AppCompatActivity {
         roomName_2 = findViewById(R.id.game_room_2_name);
         roomCurrentPlayers_2 = findViewById(R.id.game_room_2_cp);
         roomAvailable_2 = findViewById(R.id.game_room_2_status);
+
+        firebaseFirestore.collection("users").document(
+                firebaseAuth.getCurrentUser().getUid()
+        ).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    player = task.getResult().toObject(Player.class);
+                }
+            }
+        });
 
         DocumentReference docRefRoom1 = firebaseFirestore.collection("rooms").document("room_1");
         docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -96,11 +113,48 @@ public class Lobby extends AppCompatActivity {
             }
         });
 
+        testAddButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            Room room = task.getResult().toObject(Room.class);
+                            List<Player> players = room.getPlayers();
+                            if (players == null || players.size() == 0) {
+                                players = new ArrayList<>();
+                            }
+                            if (players.size() >= 5) {
+                                players = new ArrayList<>();
+                            }
+                            players.add(new Player("testAddEmail", "testAddName", 0));
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("players", players);
+
+                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    Log.d(TAG, "updated success");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.d(TAG, "updated fail");
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
+
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), GameRoom.class);
-                intent.putExtra(GAME_ROOM_NO, "one");
+                intent.putExtra(GAME_ROOM_NO, "room_1");
+                addPlayerToGameRoom("room_1", player);
                 startActivity(intent);
             }
         });
@@ -109,7 +163,7 @@ public class Lobby extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), GameRoom.class);
-                intent.putExtra(GAME_ROOM_NO, "two");
+                intent.putExtra(GAME_ROOM_NO, "room_2");
                 startActivity(intent);
             }
         });
@@ -123,6 +177,10 @@ public class Lobby extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void addPlayerToGameRoom(String roomID, @NonNull Player player) {
+        // TODO: Use listener to modify the room data
     }
 
     @Deprecated
