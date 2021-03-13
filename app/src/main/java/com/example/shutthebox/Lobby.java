@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
+import com.example.shutthebox.ui.LoginActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -172,7 +173,7 @@ public class Lobby extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FirebaseAuth.getInstance().signOut();
-                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                startActivity(new Intent(getApplicationContext(), LoginActivity.class));
                 finish();
             }
         });
