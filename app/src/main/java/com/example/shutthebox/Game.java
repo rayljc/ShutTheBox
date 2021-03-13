@@ -15,6 +15,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.example.shutthebox.ui.PostGameActivity;
+
 import java.util.Random;
 
 public class Game extends AppCompatActivity implements SensorEventListener {
@@ -83,7 +85,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Somebody quits the game");
-                Intent intent = new Intent(getApplicationContext(), PostGame.class);
+                Intent intent = new Intent(getApplicationContext(), PostGameActivity.class);
                 intent.putExtra(LOSER_NAME, "player_one");
                 startActivity(intent);
             }

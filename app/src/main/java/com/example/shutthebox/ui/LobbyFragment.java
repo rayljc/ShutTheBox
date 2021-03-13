@@ -1,19 +1,22 @@
-package com.example.shutthebox;
+package com.example.shutthebox.ui;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.example.shutthebox.R;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
-import com.example.shutthebox.ui.LoginActivity;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -30,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Lobby extends AppCompatActivity {
+public class LobbyFragment extends Fragment {
 
     private static final String TAG = "TAG_LOBBY";
     private static final String GAME_ROOM_NO = "game_room_number";
@@ -42,26 +45,28 @@ public class Lobby extends AppCompatActivity {
     TextView roomTitle_2, roomName_2, roomCurrentPlayers_2, roomAvailable_2;
     Player player;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lobby);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_lobby, container, false);
+
+        Activity activity = requireActivity();
 
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
-        joinRoomOneButton = findViewById(R.id.join_room_1_button);
-        joinRoomTwoButton = findViewById(R.id.join_room_2_button);
-        switchAccountButton = findViewById(R.id.lobby_switch_account_button);
-        testAddButton = findViewById(R.id.test_add_button);
+        joinRoomOneButton = view.findViewById(R.id.join_room_1_button);
+        joinRoomTwoButton = view.findViewById(R.id.join_room_2_button);
+        switchAccountButton = view.findViewById(R.id.lobby_switch_account_button);
+        testAddButton = view.findViewById(R.id.test_add_button);
 
-        roomTitle_1 = findViewById(R.id.game_room_1_title);
-        roomName_1 = findViewById(R.id.game_room_1_name);
-        roomCurrentPlayers_1 = findViewById(R.id.game_room_1_cp);
-        roomAvailable_1 = findViewById(R.id.game_room_1_status);
-        roomTitle_2 = findViewById(R.id.game_room_2_title);
-        roomName_2 = findViewById(R.id.game_room_2_name);
-        roomCurrentPlayers_2 = findViewById(R.id.game_room_2_cp);
-        roomAvailable_2 = findViewById(R.id.game_room_2_status);
+        roomTitle_1 = view.findViewById(R.id.game_room_1_title);
+        roomName_1 = view.findViewById(R.id.game_room_1_name);
+        roomCurrentPlayers_1 = view.findViewById(R.id.game_room_1_cp);
+        roomAvailable_1 = view.findViewById(R.id.game_room_1_status);
+        roomTitle_2 = view.findViewById(R.id.game_room_2_title);
+        roomName_2 = view.findViewById(R.id.game_room_2_name);
+        roomCurrentPlayers_2 = view.findViewById(R.id.game_room_2_cp);
+        roomAvailable_2 = view.findViewById(R.id.game_room_2_status);
 
         firebaseFirestore.collection("users").document(
                 firebaseAuth.getCurrentUser().getUid()
@@ -153,7 +158,7 @@ public class Lobby extends AppCompatActivity {
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), GameRoom.class);
+                Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
                 intent.putExtra(GAME_ROOM_NO, "room_1");
                 addPlayerToGameRoom("room_1", player);
                 startActivity(intent);
@@ -163,7 +168,7 @@ public class Lobby extends AppCompatActivity {
         joinRoomTwoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), GameRoom.class);
+                Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
                 intent.putExtra(GAME_ROOM_NO, "room_2");
                 startActivity(intent);
             }
@@ -173,11 +178,12 @@ public class Lobby extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FirebaseAuth.getInstance().signOut();
-                startActivity(new Intent(getApplicationContext(), LoginActivity.class));
-                finish();
+                startActivity(new Intent(activity.getApplicationContext(), LoginActivity.class));
+                activity.finish();
             }
         });
 
+        return view;
     }
 
     private void addPlayerToGameRoom(String roomID, @NonNull Player player) {

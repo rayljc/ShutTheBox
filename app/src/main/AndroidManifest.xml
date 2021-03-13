@@ -9,15 +9,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ShutTheBox">
-        <activity android:name=".PostGame" />
         <activity android:name=".Game" />
-        <activity android:name=".GameRoom" />
-        <activity android:name=".Lobby" />
-        <activity android:name=".Register" />
+        <activity android:name=".ui.PostGameActivity" />
+        <activity android:name=".ui.GameRoomActivity" />
+        <activity android:name=".ui.LobbyActivity" />
+        <activity android:name=".ui.RegisterActivity" />
         <activity android:name=".ui.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

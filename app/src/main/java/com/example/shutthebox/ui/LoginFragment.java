@@ -17,9 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.shutthebox.Lobby;
 import com.example.shutthebox.R;
-import com.example.shutthebox.Register;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -68,7 +66,7 @@ public class LoginFragment extends Fragment {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "Login success");
-                            startActivity(new Intent(activity.getApplicationContext(), Lobby.class));
+                            startActivity(new Intent(activity.getApplicationContext(), LobbyActivity.class));
                         } else {
                             Log.d(TAG, "Login Failed: " + task.getException().getMessage());
                             Toast.makeText(activity.getApplicationContext(), "Login failed! Please check your email and password", Toast.LENGTH_SHORT).show();
@@ -81,7 +79,7 @@ public class LoginFragment extends Fragment {
         createAccountText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(activity.getApplicationContext(), Register.class));
+                startActivity(new Intent(activity.getApplicationContext(), RegisterActivity.class));
             }
         });
 
