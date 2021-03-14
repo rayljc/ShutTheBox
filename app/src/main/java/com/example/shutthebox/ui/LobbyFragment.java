@@ -57,7 +57,7 @@ public class LobbyFragment extends Fragment {
         joinRoomOneButton = view.findViewById(R.id.join_room_1_button);
         joinRoomTwoButton = view.findViewById(R.id.join_room_2_button);
         switchAccountButton = view.findViewById(R.id.lobby_switch_account_button);
-        testAddButton = view.findViewById(R.id.test_add_button);
+//        testAddButton = view.findViewById(R.id.test_add_button);
 
         roomTitle_1 = view.findViewById(R.id.game_room_1_title);
         roomName_1 = view.findViewById(R.id.game_room_1_name);
@@ -119,41 +119,41 @@ public class LobbyFragment extends Fragment {
             }
         });
 
-        testAddButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            Room room = task.getResult().toObject(Room.class);
-                            List<Player> players = room.getPlayers();
-                            if (players == null || players.size() == 0) {
-                                players = new ArrayList<>();
-                            }
-                            if (players.size() >= 5) {
-                                players = new ArrayList<>();
-                            }
-                            players.add(new Player("testAddEmail", "testAddName", 0));
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("players", players);
-
-                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    Log.d(TAG, "updated success");
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.d(TAG, "updated fail");
-                                }
-                            });
-                        }
-                    }
-                });
-            }
-        });
+//        testAddButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+//                    @Override
+//                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+//                        if (task.isSuccessful() && task.getResult() != null) {
+//                            Room room = task.getResult().toObject(Room.class);
+//                            List<Player> players = room.getPlayers();
+//                            if (players == null || players.size() == 0) {
+//                                players = new ArrayList<>();
+//                            }
+//                            if (players.size() >= 5) {
+//                                players = new ArrayList<>();
+//                            }
+//                            players.add(new Player("testAddEmail", "testAddName", 0));
+//                            Map<String, Object> map = new HashMap<>();
+//                            map.put("players", players);
+//
+//                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+//                                @Override
+//                                public void onComplete(@NonNull Task<Void> task) {
+//                                    Log.d(TAG, "updated success");
+//                                }
+//                            }).addOnFailureListener(new OnFailureListener() {
+//                                @Override
+//                                public void onFailure(@NonNull Exception e) {
+//                                    Log.d(TAG, "updated fail");
+//                                }
+//                            });
+//                        }
+//                    }
+//                });
+//            }
+//        });
 
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
