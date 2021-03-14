@@ -38,7 +38,6 @@ public class LobbyFragment extends Fragment {
     private static final String TAG = "TAG_LOBBY";
     private static final String GAME_ROOM_NO = "game_room_number";
     Button joinRoomOneButton, joinRoomTwoButton, switchAccountButton;
-    Button testAddButton;
     FirebaseAuth firebaseAuth;
     FirebaseFirestore firebaseFirestore;
     TextView roomTitle_1, roomName_1, roomCurrentPlayers_1, roomAvailable_1;
@@ -57,7 +56,6 @@ public class LobbyFragment extends Fragment {
         joinRoomOneButton = view.findViewById(R.id.join_room_1_button);
         joinRoomTwoButton = view.findViewById(R.id.join_room_2_button);
         switchAccountButton = view.findViewById(R.id.lobby_switch_account_button);
-//        testAddButton = view.findViewById(R.id.test_add_button);
 
         roomTitle_1 = view.findViewById(R.id.game_room_1_title);
         roomName_1 = view.findViewById(R.id.game_room_1_name);
@@ -85,10 +83,11 @@ public class LobbyFragment extends Fragment {
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful() && task.getResult() != null) {
                     Room room1 = task.getResult().toObject(Room.class);
-                    String gameName = room1.getGameName();
+                    assert room1 != null;
+                    String gameName = "Game: " + room1.getGameName();
                     String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                     List<Player> players = room1.getPlayers();
-                    String numberOfPlayersText = "Players: " + players.size();
+                    String numberOfPlayersText = "Current Players: " + players.size();
                     roomName_1.setText(gameName);
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
@@ -107,9 +106,10 @@ public class LobbyFragment extends Fragment {
                 if (value != null && value.exists()) {
                     Log.d(TAG, "Current room 1 data" + value.getData());
                     Room room1 = value.toObject(Room.class);
+                    assert room1 != null;
                     String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                     List<Player> players = room1.getPlayers();
-                    String numberOfPlayersText = "Players: " + players.size();
+                    String numberOfPlayersText = "Current Players: " + players.size();
                     // Only update player numbers and room status
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
@@ -118,42 +118,6 @@ public class LobbyFragment extends Fragment {
                 }
             }
         });
-
-//        testAddButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-//                        if (task.isSuccessful() && task.getResult() != null) {
-//                            Room room = task.getResult().toObject(Room.class);
-//                            List<Player> players = room.getPlayers();
-//                            if (players == null || players.size() == 0) {
-//                                players = new ArrayList<>();
-//                            }
-//                            if (players.size() >= 5) {
-//                                players = new ArrayList<>();
-//                            }
-//                            players.add(new Player("testAddEmail", "testAddName", 0));
-//                            Map<String, Object> map = new HashMap<>();
-//                            map.put("players", players);
-//
-//                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-//                                @Override
-//                                public void onComplete(@NonNull Task<Void> task) {
-//                                    Log.d(TAG, "updated success");
-//                                }
-//                            }).addOnFailureListener(new OnFailureListener() {
-//                                @Override
-//                                public void onFailure(@NonNull Exception e) {
-//                                    Log.d(TAG, "updated fail");
-//                                }
-//                            });
-//                        }
-//                    }
-//                });
-//            }
-//        });
 
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,6 +129,7 @@ public class LobbyFragment extends Fragment {
             }
         });
 
+        // This button is only skin deep LOL
         joinRoomTwoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -187,7 +152,37 @@ public class LobbyFragment extends Fragment {
     }
 
     private void addPlayerToGameRoom(String roomID, @NonNull Player player) {
-        // TODO: Use listener to modify the room data
+        DocumentReference docRefRoom = firebaseFirestore.collection("rooms").document(roomID);
+        docRefRoom.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful() && task.getResult() != null) {
+                    Room room = task.getResult().toObject(Room.class);
+                    List<Player> players = room.getPlayers();
+                    if (players == null || players.size() == 0) {
+                        players = new ArrayList<>();
+                    }
+                    if (players.size() >= 5) {
+                        players = new ArrayList<>();
+                    }
+                    players.add(player);
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("players", players);
+
+                    docRefRoom.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            Log.d(TAG, "updated success");
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            Log.d(TAG, "updated fail");
+                        }
+                    });
+                }
+            }
+        });
     }
 
     @Deprecated
