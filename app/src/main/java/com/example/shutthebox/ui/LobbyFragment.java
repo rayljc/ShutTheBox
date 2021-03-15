@@ -37,12 +37,14 @@ public class LobbyFragment extends Fragment {
 
     private static final String TAG = "TAG_LOBBY";
     private static final String GAME_ROOM_NO = "game_room_number";
+    private static final int MAX_PLAYER_NUMBER = 4;
     Button joinRoomOneButton, joinRoomTwoButton, switchAccountButton;
     FirebaseAuth firebaseAuth;
     FirebaseFirestore firebaseFirestore;
     TextView roomTitle_1, roomName_1, roomCurrentPlayers_1, roomAvailable_1;
     TextView roomTitle_2, roomName_2, roomCurrentPlayers_2, roomAvailable_2;
     Player player;
+    Boolean room1Available;
 
     @Nullable
     @Override
@@ -66,6 +68,7 @@ public class LobbyFragment extends Fragment {
         roomCurrentPlayers_2 = view.findViewById(R.id.game_room_2_cp);
         roomAvailable_2 = view.findViewById(R.id.game_room_2_status);
 
+        // Get current user profile
         firebaseFirestore.collection("users").document(
                 firebaseAuth.getCurrentUser().getUid()
         ).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -77,6 +80,7 @@ public class LobbyFragment extends Fragment {
             }
         });
 
+        // Initialize the lobby page using room_1 info
         DocumentReference docRefRoom1 = firebaseFirestore.collection("rooms").document("room_1");
         docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -85,9 +89,10 @@ public class LobbyFragment extends Fragment {
                     Room room1 = task.getResult().toObject(Room.class);
                     assert room1 != null;
                     String gameName = "Game: " + room1.getGameName();
-                    String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                     List<Player> players = room1.getPlayers();
                     String numberOfPlayersText = "Current Players: " + players.size();
+                    String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
+                    room1Available = room1.getAvailable();
                     roomName_1.setText(gameName);
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
@@ -96,6 +101,7 @@ public class LobbyFragment extends Fragment {
             }
         });
 
+        // Add room_1 listener
         docRefRoom1.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
@@ -107,9 +113,40 @@ public class LobbyFragment extends Fragment {
                     Log.d(TAG, "Current room 1 data" + value.getData());
                     Room room1 = value.toObject(Room.class);
                     assert room1 != null;
-                    String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                     List<Player> players = room1.getPlayers();
                     String numberOfPlayersText = "Current Players: " + players.size();
+                    if (players.size() >= MAX_PLAYER_NUMBER) {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("available", false);
+                        docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Log.d(TAG, "room_1 status set to unavailable");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d(TAG, "Failed to update room_1 status");
+                            }
+                        });
+                    } else {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("available", true);
+                        docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Log.d(TAG, "room_1 status set to available");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.d(TAG, "Failed to update room_1 status");
+                            }
+                        });
+                    }
+
+                    String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
+                    room1Available = room1.getAvailable();
                     // Only update player numbers and room status
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
@@ -119,9 +156,13 @@ public class LobbyFragment extends Fragment {
             }
         });
 
+        // Join Room one.
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!room1Available) {
+                    return;
+                }
                 Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
                 intent.putExtra(GAME_ROOM_NO, "room_1");
                 addPlayerToGameRoom("room_1", player);
@@ -129,7 +170,7 @@ public class LobbyFragment extends Fragment {
             }
         });
 
-        // This button is only skin deep LOL
+        // This button is only skin deep. It's useless.
         joinRoomTwoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,6 +180,7 @@ public class LobbyFragment extends Fragment {
             }
         });
 
+        // Switch account. Sign out and return to login page.
         switchAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -151,6 +193,7 @@ public class LobbyFragment extends Fragment {
         return view;
     }
 
+
     private void addPlayerToGameRoom(String roomID, @NonNull Player player) {
         DocumentReference docRefRoom = firebaseFirestore.collection("rooms").document(roomID);
         docRefRoom.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -160,9 +203,6 @@ public class LobbyFragment extends Fragment {
                     Room room = task.getResult().toObject(Room.class);
                     List<Player> players = room.getPlayers();
                     if (players == null || players.size() == 0) {
-                        players = new ArrayList<>();
-                    }
-                    if (players.size() >= 5) {
                         players = new ArrayList<>();
                     }
                     players.add(player);
