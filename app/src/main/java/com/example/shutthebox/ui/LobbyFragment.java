@@ -96,7 +96,6 @@ public class LobbyFragment extends Fragment {
                     roomName_1.setText(gameName);
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
-
                 }
             }
         });
@@ -147,6 +146,7 @@ public class LobbyFragment extends Fragment {
 
                     String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                     room1Available = room1.getAvailable();
+
                     // Only update player numbers and room status
                     roomAvailable_1.setText(statusText);
                     roomCurrentPlayers_1.setText(numberOfPlayersText);
@@ -156,7 +156,6 @@ public class LobbyFragment extends Fragment {
             }
         });
 
-        // Join Room one.
         joinRoomOneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -166,16 +165,6 @@ public class LobbyFragment extends Fragment {
                 Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
                 intent.putExtra(GAME_ROOM_NO, "room_1");
                 addPlayerToGameRoom("room_1", player);
-                startActivity(intent);
-            }
-        });
-
-        // This button is only skin deep. It's useless.
-        joinRoomTwoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
-                intent.putExtra(GAME_ROOM_NO, "room_2");
                 startActivity(intent);
             }
         });
@@ -223,31 +212,6 @@ public class LobbyFragment extends Fragment {
                 }
             }
         });
-    }
-
-    @Deprecated
-    private void createRoomsForTheFirstTime() {
-        /**
-         * This method is deprecated now. It's for reference only.
-         */
-        CollectionReference collectionReference = firebaseFirestore.collection("rooms");
-        if (firebaseFirestore != null) {
-            Map<String, Object> room = new HashMap<>();
-            room.put("id", 1);
-            room.put("players", new ArrayList<>());
-            room.put("game_name", "Shut The Box");
-            room.put("available", true);
-            collectionReference.document("room_1").set(room);
-        }
-
-        if (firebaseFirestore != null) {
-            Map<String, Object> room = new HashMap<>();
-            room.put("id", 2);
-            room.put("players", new ArrayList<>());
-            room.put("game_name", "Shut The Box");
-            room.put("available", true);
-            collectionReference.document("room_2").set(room);
-        }
     }
 
     private void createRoomForTheFirstTime2() {

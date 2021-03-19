@@ -133,10 +133,6 @@ public class GameRoomFragment extends Fragment {
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Log.d(TAG, "Somebody wants to start the game");
-//                Intent intent = new Intent(activity.getApplicationContext(), Game.class);
-//                intent.putExtra(GAME_ROOM_ID, 1);
-//                startActivity(intent);
 
                 docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                     @Override
@@ -149,7 +145,7 @@ public class GameRoomFragment extends Fragment {
                             // new a GameEntry
                             String gameEntryID = newGameEntry(players, gameRoomNumber);
 
-                            // Delete all players in the room
+                            // Delete all players in the room and set gameEntryID
                             Map<String, Object> map = new HashMap<>();
                             map.put("players", new ArrayList<>());
                             map.put("gameEntryID", gameEntryID);
@@ -167,7 +163,6 @@ public class GameRoomFragment extends Fragment {
                         }
                     }
                 });
-
             }
         });
 
@@ -186,18 +181,18 @@ public class GameRoomFragment extends Fragment {
     }
 
     private String newGameEntry(List<Player> players, String gameRoomNumber) {
-        String _id = UUID.randomUUID().toString();
-        List<WoodenCard> _woodenCards = new ArrayList<>();
+        String id = UUID.randomUUID().toString();
+        List<WoodenCard> woodenCards = new ArrayList<>();
         for (int i = 1; i <= 12; i++) {
-            _woodenCards.add(new WoodenCard(i, false));
+            woodenCards.add(new WoodenCard(i, false));
         }
 
-        GameEntry gameEntry = new GameEntry(_id, _woodenCards, 1, 6,
+        GameEntry gameEntry = new GameEntry(id, woodenCards, 1, 6,
                 players, 0, null, gameRoomNumber);
 
-        firebaseFirestore.collection("games").document(_id).set(gameEntry);
+        firebaseFirestore.collection("games").document(id).set(gameEntry);
 
-        return _id;
+        return id;
     }
 
     @Override
@@ -207,7 +202,6 @@ public class GameRoomFragment extends Fragment {
         removePlayerFromGameRoom(gameRoomNumber, player);
     }
 
-    /* java.lang.IndexOutOfBoundsException */
     private void setPlayersNameOnView(List<Player> players) {
         switch (players.size()) {
             case 0:
