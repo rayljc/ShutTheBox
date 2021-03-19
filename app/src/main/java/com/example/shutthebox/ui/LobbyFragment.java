@@ -256,12 +256,12 @@ public class LobbyFragment extends Fragment {
          */
         CollectionReference collectionReference = firebaseFirestore.collection("rooms");
         if (firebaseFirestore != null) {
-            Room room = new Room("room_1", new ArrayList<Player>(), "Shut the box", true);
+            Room room = new Room("room_1", new ArrayList<Player>(), "Shut the box", true, "");
             collectionReference.document("room_1").set(room);
         }
 
         if (firebaseFirestore != null) {
-            Room room = new Room("room_2", new ArrayList<Player>(), "Shut the box", false);
+            Room room = new Room("room_2", new ArrayList<Player>(), "Shut the box", false, "");
             collectionReference.document("room_2").set(room);
         }
     }

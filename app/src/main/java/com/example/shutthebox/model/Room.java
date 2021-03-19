@@ -15,5 +15,6 @@ public class Room {
     private List<Player> players;
     private String gameName;
     private Boolean available;
+    private String gameEntryID;
 
 }

@@ -16,8 +16,10 @@ import androidx.fragment.app.Fragment;
 
 import com.example.shutthebox.Game;
 import com.example.shutthebox.R;
+import com.example.shutthebox.model.GameEntry;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
+import com.example.shutthebox.model.WoodenCard;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
@@ -33,17 +35,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class GameRoomFragment extends Fragment {
 
     private static final String TAG = "TAG_GAME_ROOM";
     private static final String GAME_ROOM_ID = "GAME_ROOM_ID";
+    private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
     TextView gameRoomNumberText;
     TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
     Button startGameButton, leaveRoomButton;
     FirebaseFirestore firebaseFirestore;
     FirebaseAuth firebaseAuth;
     Player player;
+    String gameRoomNumber;
 
     @Nullable
     @Override
@@ -77,8 +82,9 @@ public class GameRoomFragment extends Fragment {
         });
 
         //++ Room specific info
-        String _game_room_number = "Game room " + activity.getIntent().getExtras().getString("game_room_number", "zero");
-        gameRoomNumberText.setText(_game_room_number);
+        gameRoomNumber = activity.getIntent().getExtras().getString("game_room_number", "zero");
+        String welcomeToRoom = getString(R.string.welcome_text) + gameRoomNumber;
+        gameRoomNumberText.setText(welcomeToRoom);
         //-- Room specific info
 
         // Initialize the room page using room_1 info
@@ -90,7 +96,7 @@ public class GameRoomFragment extends Fragment {
                     Room room1 = task.getResult().toObject(Room.class);
                     assert room1 != null;
                     List<Player> players = room1.getPlayers();
-//                    setPlayersNameOnView(players);
+                    setPlayersNameOnView(players);
                 }
             }
         });
@@ -108,7 +114,16 @@ public class GameRoomFragment extends Fragment {
                     Room room1 = value.toObject(Room.class);
                     assert room1 != null;
                     List<Player> players = room1.getPlayers();
-//                    setPlayersNameOnView(players);
+                    String gameEntryID = room1.getGameEntryID();
+
+                    if (players.size() == 0) {
+                        Intent intent = new Intent(activity.getApplicationContext(), Game.class);
+                        intent.putExtra(GAME_ROOM_ID, 1);
+                        intent.putExtra(GAME_ENTRY_ID, gameEntryID);
+                        startActivity(intent);
+                    }
+
+                    setPlayersNameOnView(players);
                 } else {
                     Log.d(TAG, "Current room 1 data is null or not exists");
                 }
@@ -118,10 +133,41 @@ public class GameRoomFragment extends Fragment {
         startGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d(TAG, "Somebody wants to start the game");
-                Intent intent = new Intent(activity.getApplicationContext(), Game.class);
-                intent.putExtra(GAME_ROOM_ID, 1);
-                startActivity(intent);
+//                Log.d(TAG, "Somebody wants to start the game");
+//                Intent intent = new Intent(activity.getApplicationContext(), Game.class);
+//                intent.putExtra(GAME_ROOM_ID, 1);
+//                startActivity(intent);
+
+                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful() && task.getResult() != null) {
+                            Room room = task.getResult().toObject(Room.class);
+                            assert room != null;
+                            List<Player> players = room.getPlayers();
+
+                            // new a GameEntry
+                            String gameEntryID = newGameEntry(players, gameRoomNumber);
+
+                            // Delete all players in the room
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("players", new ArrayList<>());
+                            map.put("gameEntryID", gameEntryID);
+                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    Log.d(TAG, "updated success");
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Log.d(TAG, "updated failed");
+                                }
+                            });
+                        }
+                    }
+                });
+
             }
         });
 
@@ -139,6 +185,28 @@ public class GameRoomFragment extends Fragment {
         return view;
     }
 
+    private String newGameEntry(List<Player> players, String gameRoomNumber) {
+        String _id = UUID.randomUUID().toString();
+        List<WoodenCard> _woodenCards = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            _woodenCards.add(new WoodenCard(i, false));
+        }
+
+        GameEntry gameEntry = new GameEntry(_id, _woodenCards, 1, 6,
+                players, 0, null, gameRoomNumber);
+
+        firebaseFirestore.collection("games").document(_id).set(gameEntry);
+
+        return _id;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        assert player != null;
+        removePlayerFromGameRoom(gameRoomNumber, player);
+    }
+
     /* java.lang.IndexOutOfBoundsException */
     private void setPlayersNameOnView(List<Player> players) {
         switch (players.size()) {
@@ -150,21 +218,25 @@ public class GameRoomFragment extends Fragment {
                 playerTwoNameText.setVisibility(View.INVISIBLE);
                 playerThreeNameText.setVisibility(View.INVISIBLE);
                 playerFourNameText.setVisibility(View.INVISIBLE);
+                break;
             case 2:
                 playerOneNameText.setText(players.get(0).getDisplayName());
                 playerTwoNameText.setText(players.get(1).getDisplayName());
                 playerThreeNameText.setVisibility(View.INVISIBLE);
                 playerFourNameText.setVisibility(View.INVISIBLE);
+                break;
             case 3:
                 playerOneNameText.setText(players.get(0).getDisplayName());
                 playerTwoNameText.setText(players.get(1).getDisplayName());
                 playerThreeNameText.setText(players.get(2).getDisplayName());
                 playerFourNameText.setVisibility(View.INVISIBLE);
+                break;
             case 4:
                 playerOneNameText.setText(players.get(0).getDisplayName());
                 playerTwoNameText.setText(players.get(1).getDisplayName());
                 playerThreeNameText.setText(players.get(2).getDisplayName());
                 playerFourNameText.setText(players.get(3).getDisplayName());
+                break;
             default:
                 Log.d(TAG, "Something bad happens: player size unknown");
                 break;
@@ -182,7 +254,7 @@ public class GameRoomFragment extends Fragment {
                     if (players == null || players.size() == 0) {
                         return;
                     }
-                    players.remove(player);  // Haven't been tested
+                    players.remove(player);
                     Map<String, Object> map = new HashMap<>();
                     map.put("players", players);
 
