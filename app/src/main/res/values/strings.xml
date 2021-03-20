@@ -13,7 +13,7 @@
     <string name="go_to_default_room">Go to default room</string>
     <string name="switch_account">Switch Account</string>
     <string name="game_room_1">Game Room 1</string>
-    <string name="status_available">Status: Available</string>
+    <string name="status_available">Status: available</string>
     <string name="join_room">Join Room</string>
     <string name="current_players_0">Current Players: 0</string>
     <string name="game_shut_the_box">Game: Shut the box</string>
@@ -43,5 +43,5 @@
     <string name="time_to_push_ups">Time to push ups!</string>
     <string name="roll_me">Roll me</string>
     <string name="add_string">Add</string>
-    <string name="welcome_text">\"Welcome \"</string>
+    <string name="welcome_text">Welcome:</string>
 </resources>

@@ -37,6 +37,8 @@ public class LobbyFragment extends Fragment {
 
     private static final String TAG = "TAG_LOBBY";
     private static final String GAME_ROOM_NO = "game_room_number";
+    private static final String USERS_COLLECTION = "users";
+    private static final String ROOMS_COLLECTION = "rooms";
     private static final int MAX_PLAYER_NUMBER = 4;
     Button joinRoomOneButton, joinRoomTwoButton, switchAccountButton;
     FirebaseAuth firebaseAuth;
@@ -69,7 +71,7 @@ public class LobbyFragment extends Fragment {
         roomAvailable_2 = view.findViewById(R.id.game_room_2_status);
 
         // Get current user profile
-        firebaseFirestore.collection("users").document(
+        firebaseFirestore.collection(USERS_COLLECTION).document(
                 firebaseAuth.getCurrentUser().getUid()
         ).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -81,7 +83,7 @@ public class LobbyFragment extends Fragment {
         });
 
         // Initialize the lobby page using room_1 info
-        DocumentReference docRefRoom1 = firebaseFirestore.collection("rooms").document("room_1");
+        DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
         docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -184,12 +186,13 @@ public class LobbyFragment extends Fragment {
 
 
     private void addPlayerToGameRoom(String roomID, @NonNull Player player) {
-        DocumentReference docRefRoom = firebaseFirestore.collection("rooms").document(roomID);
+        DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
         docRefRoom.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful() && task.getResult() != null) {
                     Room room = task.getResult().toObject(Room.class);
+                    assert room != null;
                     List<Player> players = room.getPlayers();
                     if (players == null || players.size() == 0) {
                         players = new ArrayList<>();
@@ -218,7 +221,7 @@ public class LobbyFragment extends Fragment {
         /**
          * Do not execute this method. Those data is already there now!
          */
-        CollectionReference collectionReference = firebaseFirestore.collection("rooms");
+        CollectionReference collectionReference = firebaseFirestore.collection(ROOMS_COLLECTION);
         if (firebaseFirestore != null) {
             Room room = new Room("room_1", new ArrayList<Player>(), "Shut the box", true, "");
             collectionReference.document("room_1").set(room);

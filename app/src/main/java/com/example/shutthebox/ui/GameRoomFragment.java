@@ -2,6 +2,7 @@ package com.example.shutthebox.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -42,6 +43,8 @@ public class GameRoomFragment extends Fragment {
     private static final String TAG = "TAG_GAME_ROOM";
     private static final String GAME_ROOM_ID = "GAME_ROOM_ID";
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
+    private static final String GAME_ROOM_NO = "game_room_number";
+    private static final String ROOMS_COLLECTION = "rooms";
     TextView gameRoomNumberText;
     TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
     Button startGameButton, leaveRoomButton;
@@ -82,13 +85,13 @@ public class GameRoomFragment extends Fragment {
         });
 
         //++ Room specific info
-        gameRoomNumber = activity.getIntent().getExtras().getString("game_room_number", "zero");
-        String welcomeToRoom = getString(R.string.welcome_text) + gameRoomNumber;
+        gameRoomNumber = activity.getIntent().getExtras().getString(GAME_ROOM_NO, "");
+        String welcomeToRoom = getString(R.string.welcome_text) + " " + gameRoomNumber;
         gameRoomNumberText.setText(welcomeToRoom);
         //-- Room specific info
 
         // Initialize the room page using room_1 info
-        DocumentReference docRefRoom1 = firebaseFirestore.collection("rooms").document("room_1");
+        DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
         docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
@@ -110,7 +113,6 @@ public class GameRoomFragment extends Fragment {
                 }
 
                 if (value != null && value.exists()) {
-                    Log.d(TAG, "Current room 1 data" + value.getData());
                     Room room1 = value.toObject(Room.class);
                     assert room1 != null;
                     List<Player> players = room1.getPlayers();
@@ -124,6 +126,7 @@ public class GameRoomFragment extends Fragment {
                     }
 
                     setPlayersNameOnView(players);
+
                 } else {
                     Log.d(TAG, "Current room 1 data is null or not exists");
                 }
@@ -238,7 +241,7 @@ public class GameRoomFragment extends Fragment {
     }
 
     private void removePlayerFromGameRoom(String roomID, @NonNull Player player) {
-        DocumentReference docRefRoom = firebaseFirestore.collection("rooms").document(roomID);
+        DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
         docRefRoom.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
