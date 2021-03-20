@@ -15,9 +15,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.example.shutthebox.model.Combination;
 import com.example.shutthebox.ui.PostGameActivity;
 
 import java.util.Random;
+import java.util.Set;
 
 public class Game extends AppCompatActivity implements SensorEventListener {
 
@@ -32,6 +34,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     Button rollButton, finishButton, quitButton;
     Button[] woodenCards = new Button[13];  // 13 instead of 12, can be a TO-DO item later
     ImageView dice1, dice2;
+    protected int target;
+    protected Set<Integer> chosen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +65,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 public void onClick(View v) {
                     Log.d(TAG, "button clicked: " + String.valueOf(finalI));
                     woodenCards[finalI].setBackgroundColor(Color.GRAY);
+                    chosen.add(finalI);
                 }
             });
         }
@@ -77,7 +82,18 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //ToDo add game logic here
+                Combination combination =new Combination();
+                Boolean res = combination.judge(target,chosen);
+                if (res){
+                    //continue
+                }else{
+                    //shut down & go to end game screen
+                }
+                //
                 Log.d(TAG, "Somebody finish marking wooden cards");
+                target=0;
+                chosen.clear();
             }
         });
 
@@ -94,6 +110,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
     private void rollDice(ImageView dice) {
         int randomNumber = random.nextInt(6) + 1;
+        target += randomNumber;
         switch (randomNumber) {
             case 1:
                 dice.setImageResource(R.drawable.dice1);
