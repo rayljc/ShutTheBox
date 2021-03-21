@@ -1,0 +1,8 @@
+The game is playable now.
+
+Known issues:
+1. The app is not optimized and may not be efficient.
+
+UI/UX:
+1. The UI can be better. Fine-tuning is suggested.
+2. May add Toasts to prompt the user when playing the game.

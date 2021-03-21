@@ -58,6 +58,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     FirebaseFirestore firebaseFirestore;
     FirebaseAuth firebaseAuth;
 
+    private boolean gameInitialized = false;
+
     private Player player;  // invariant got from cloud db
     private String gameEntryID;  // invariant got from cloud db
     private List<Player> playerList;  // invariant got from cloud db
@@ -218,9 +220,6 @@ public class Game extends AppCompatActivity implements SensorEventListener {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Somebody quits the game");
-//                Intent intent = new Intent(getApplicationContext(), PostGameActivity.class);
-//                intent.putExtra(LOSER_NAME, "player_one");
-//                startActivity(intent);
                 updateLoserInfo();
             }
         });
@@ -229,6 +228,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         }
+
+        gameInitialized = true;
     }
 
     private void goToPostGamePage(Player loser) {
@@ -453,15 +454,10 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (true) {  // Disable shaking the phone and rolling the dice for now
+        if (playerList == null || player == null || !gameInitialized) {
             return;
         }
 
-        /**
-         * java.lang.NullPointerException: Attempt to invoke interface method
-         * 'int java.util.List.indexOf(java.lang.Object)' on a null object reference
-         *         at com.example.shutthebox.Game.onSensorChanged(Game.java:423)
-         */
         if (playerList.indexOf(player) != currentPlayerIndex) {
             return;
         }

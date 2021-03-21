@@ -100,10 +100,6 @@ public class RegisterFragment extends Fragment {
                             Toast.makeText(activity.getApplicationContext(), "User Created.", Toast.LENGTH_SHORT).show();
                             String userID = firebaseUser.getUid();
                             DocumentReference documentReference = firebaseFirestore.collection("users").document(userID);
-//                            Map<String, Object> userProfile = new HashMap<>();
-//                            userProfile.put("email", _email);
-//                            userProfile.put("display_name", _displayName);
-//                            userProfile.put("ready", 0);  // 0 for "not ready", 1 for "ready", may extend states from 2 in the future
                             Player userProfile = new Player(_email, _displayName, 0);
                             documentReference.set(userProfile).addOnSuccessListener(new OnSuccessListener<Void>() {
                                 @Override

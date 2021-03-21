@@ -45,6 +45,7 @@ public class GameRoomFragment extends Fragment {
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
     private static final String GAME_ROOM_NO = "game_room_number";
     private static final String ROOMS_COLLECTION = "rooms";
+    private boolean leaveButtonPressed = false;
     TextView gameRoomNumberText;
     TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
     Button startGameButton, leaveRoomButton;
@@ -118,7 +119,7 @@ public class GameRoomFragment extends Fragment {
                     List<Player> players = room1.getPlayers();
                     String gameEntryID = room1.getGameEntryID();
 
-                    if (players.size() == 0) {
+                    if (!leaveButtonPressed && players.size() == 0) {
                         Intent intent = new Intent(activity.getApplicationContext(), Game.class);
                         intent.putExtra(GAME_ROOM_ID, 1);
                         intent.putExtra(GAME_ENTRY_ID, gameEntryID);
@@ -174,6 +175,7 @@ public class GameRoomFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Somebody leaves the room");
+                leaveButtonPressed = true;
                 Intent intent = new Intent(activity.getApplicationContext(), LobbyActivity.class);
                 removePlayerFromGameRoom("room_1", player);
                 startActivity(intent);
@@ -212,27 +214,37 @@ public class GameRoomFragment extends Fragment {
                 break;
             case 1:
                 playerOneNameText.setText(players.get(0).getDisplayName());
+                playerOneNameText.setVisibility(View.VISIBLE);
                 playerTwoNameText.setVisibility(View.INVISIBLE);
                 playerThreeNameText.setVisibility(View.INVISIBLE);
                 playerFourNameText.setVisibility(View.INVISIBLE);
                 break;
             case 2:
                 playerOneNameText.setText(players.get(0).getDisplayName());
+                playerOneNameText.setVisibility(View.VISIBLE);
                 playerTwoNameText.setText(players.get(1).getDisplayName());
+                playerTwoNameText.setVisibility(View.VISIBLE);
                 playerThreeNameText.setVisibility(View.INVISIBLE);
                 playerFourNameText.setVisibility(View.INVISIBLE);
                 break;
             case 3:
                 playerOneNameText.setText(players.get(0).getDisplayName());
+                playerOneNameText.setVisibility(View.VISIBLE);
                 playerTwoNameText.setText(players.get(1).getDisplayName());
+                playerTwoNameText.setVisibility(View.VISIBLE);
                 playerThreeNameText.setText(players.get(2).getDisplayName());
+                playerThreeNameText.setVisibility(View.VISIBLE);
                 playerFourNameText.setVisibility(View.INVISIBLE);
                 break;
             case 4:
                 playerOneNameText.setText(players.get(0).getDisplayName());
+                playerOneNameText.setVisibility(View.VISIBLE);
                 playerTwoNameText.setText(players.get(1).getDisplayName());
+                playerTwoNameText.setVisibility(View.VISIBLE);
                 playerThreeNameText.setText(players.get(2).getDisplayName());
+                playerThreeNameText.setVisibility(View.VISIBLE);
                 playerFourNameText.setText(players.get(3).getDisplayName());
+                playerFourNameText.setVisibility(View.VISIBLE);
                 break;
             default:
                 Log.d(TAG, "Something bad happens: player size unknown");
