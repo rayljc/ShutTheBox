@@ -34,12 +34,7 @@ public class PostGameFragment extends Fragment {
         String loserName = activity.getIntent().getExtras().getString(LOSER_NAME);
         loserNameText.setText(loserName);
 
-        goToLobbyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(activity.getApplicationContext(), LobbyActivity.class));
-            }
-        });
+        goToLobbyButton.setOnClickListener(v -> startActivity(new Intent(activity.getApplicationContext(), LobbyActivity.class)));
 
         return view;
     }

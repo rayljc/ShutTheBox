@@ -1,9 +1,5 @@
 package com.example.shutthebox;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -18,21 +14,18 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.shutthebox.model.GameEntry;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.WoodenCard;
 import com.example.shutthebox.ui.PostGameActivity;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,68 +87,61 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         // Get current user profile
         firebaseFirestore.collection("users").document(
                 firebaseAuth.getCurrentUser().getUid()
-        ).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    player = task.getResult().toObject(Player.class);
-                }
+        ).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                player = task.getResult().toObject(Player.class);
             }
         });
 
-        //++ GameEntry specific info
+        // GameEntry specific info
         gameEntryID = getIntent().getExtras().getString(GAME_ENTRY_ID, "");
-        //-- GameEntry specific info
 
         // Initialize the page using GameEntry info
         DocumentReference gameEntryDocRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
-        gameEntryDocRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    GameEntry entry = task.getResult().toObject(GameEntry.class);
-                    assert entry != null;
-                    playerList = entry.getPlayers();
-                    setPlayersNameOnView(playerList);
-                    currentPlayerIndex = entry.getPlayerTurnIndex();
-                    setCurrentPlayerBackground(currentPlayerIndex);
-                }
+        gameEntryDocRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                assert entry != null;
+                playerList = entry.getPlayers();
+                setPlayersNameOnView(playerList,
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+                currentPlayerIndex = entry.getPlayerTurnIndex();
+                setCurrentPlayersBackground(currentPlayerIndex,
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
             }
         });
 
         // Add GameEntry listener
-        gameEntryDocRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                if (error != null) {
-                    Log.d(TAG, "Event listener for GameEntry failed");
+        gameEntryDocRef.addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.d(TAG, "Event listener for GameEntry failed");
+            }
+
+            if (value != null && value.exists()) {
+                GameEntry entry = value.toObject(GameEntry.class);
+                assert entry != null;
+
+                Player loser = entry.getLoser();
+                if (loser != null) {
+                    goToPostGamePage(loser);
                 }
 
-                if (value != null && value.exists()) {
-                    GameEntry entry = value.toObject(GameEntry.class);
-                    assert entry != null;
+                refreshDiceImage(dice1, entry.getDice1());
+                refreshDiceImage(dice2, entry.getDice2());
 
-                    Player loser = entry.getLoser();
-                    if (loser != null) {
-                        goToPostGamePage(loser);
+                for (WoodenCard woodenCard : entry.getWoodenCards()) {
+                    if (woodenCard.isMarked()) {
+                        woodenCardsMarked[woodenCard.getNumber()] = true;
+                        woodenCards[woodenCard.getNumber()].setBackgroundColor(Color.GRAY);
                     }
-
-                    refreshDiceImage(dice1, entry.getDice1());
-                    refreshDiceImage(dice2, entry.getDice2());
-
-                    for (WoodenCard woodenCard : entry.getWoodenCards()) {
-                        if (woodenCard.isMarked()) {
-                            woodenCardsMarked[woodenCard.getNumber()] = true;
-                            woodenCards[woodenCard.getNumber()].setBackgroundColor(Color.GRAY);
-                        }
-                    }
-
-                    currentPlayerIndex = entry.getPlayerTurnIndex();
-                    setCurrentPlayerBackground(currentPlayerIndex);
-
-                } else {
-                    Log.d(TAG, "Current GameEntry is null or not exists");
                 }
+
+                currentPlayerIndex = entry.getPlayerTurnIndex();
+                setCurrentPlayersBackground(currentPlayerIndex,
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+
+            } else {
+                Log.d(TAG, "Current GameEntry is null or not exists");
             }
         });
 
@@ -166,62 +152,48 @@ public class Game extends AppCompatActivity implements SensorEventListener {
             woodenCards[i].setBackgroundColor(Color.MAGENTA);
 
             int finalI = i;
-            woodenCards[i].setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (playerList.indexOf(player) != currentPlayerIndex) {
-                        return;
-                    }
-                    if (!diceRolled) {
-                        return;
-                    }
-                    if (woodenCardsMarked[finalI]) {
-                        return;
-                    }
-
-                    Log.d(TAG, "button clicked: " + String.valueOf(finalI));
-                    currentMarkedCards.add(finalI);
-
-                    updateWoodenCardState(finalI);
-                }
-            });
-        }
-
-        rollButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                roll();
-            }
-        });
-
-        finishButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+            woodenCards[i].setOnClickListener(v -> {
                 if (playerList.indexOf(player) != currentPlayerIndex) {
                     return;
                 }
                 if (!diceRolled) {
                     return;
                 }
-
-                // Check the result
-                boolean isLegal = checkResult(diceOnePoint, diceTwoPoint, currentMarkedCards);
-                if (!isLegal) {
-                    updateLoserInfo();  // update Loser info and the listener would do the rest.
-                } else {
-                    nextRound();
-                    diceRolled = false;
-                    currentMarkedCards = new ArrayList<>();
+                if (woodenCardsMarked[finalI]) {
+                    return;
                 }
+
+                Log.d(TAG, "button clicked: " + finalI);
+                currentMarkedCards.add(finalI);
+
+                updateWoodenCardState(finalI);
+            });
+        }
+
+        rollButton.setOnClickListener(v -> roll());
+
+        finishButton.setOnClickListener(v -> {
+            if (playerList.indexOf(player) != currentPlayerIndex) {
+                return;
+            }
+            if (!diceRolled) {
+                return;
+            }
+
+            // Check the result
+            boolean isLegal = checkResult(diceOnePoint, diceTwoPoint, currentMarkedCards);
+            if (!isLegal) {
+                updateLoserInfo();  // update Loser info and the listener would do the rest.
+            } else {
+                nextRound();
+                diceRolled = false;
+                currentMarkedCards = new ArrayList<>();
             }
         });
 
-        quitButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "Somebody quits the game");
-                updateLoserInfo();
-            }
+        quitButton.setOnClickListener(v -> {
+            Log.d(TAG, "Somebody quits the game");
+            updateLoserInfo();
         });
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -240,31 +212,19 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
     private void updateWoodenCardState(int finalI) {
         DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    GameEntry entry = task.getResult().toObject(GameEntry.class);
-                    assert entry != null;
-                    List<WoodenCard> woodenCards = entry.getWoodenCards();
-                    int index = finalI - 1;  // Could be a TO-DO item
-                    woodenCards.get(index).setMarked(true);
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                assert entry != null;
+                List<WoodenCard> woodenCards = entry.getWoodenCards();
+                int index = finalI - 1;  // Could be a TO-DO item
+                woodenCards.get(index).setMarked(true);
 
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("woodenCards", woodenCards);
+                Map<String, Object> map = new HashMap<>();
+                map.put("woodenCards", woodenCards);
 
-                    docRef.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            Log.d(TAG, "updated success");
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "updated failed");
-                        }
-                    });
-                }
+                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
+                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
             }
         });
     }
@@ -273,17 +233,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
         Map<String, Object> map = new HashMap<>();
         map.put("loser", player);
-        docRef.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                Log.d(TAG, "updated success");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "updated failed");
-            }
-        });
+        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
+                .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
     }
 
     private boolean checkResult(int diceOnePoint, int diceTwoPoint, List<Integer> currentMarkedCards) {
@@ -312,17 +263,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         Map<String, Object> map = new HashMap<>();
         map.put("dice1", diceOnePoint);
         map.put("dice2", diceTwoPoint);
-        docRef.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                Log.d(TAG, "updated success");
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "updated failed");
-            }
-        });
+        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
+                .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
     }
 
     private int rollDice() {
@@ -354,100 +296,48 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         }
     }
 
-    private void setPlayersNameOnView(List<Player> players) {
-        switch (players.size()) {
-            case 0:
-                Log.d(TAG, "Something bad happens: there is no player");
-                break;
-            case 1:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerTwoNameText.setVisibility(View.INVISIBLE);
-                playerThreeNameText.setVisibility(View.INVISIBLE);
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 2:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerThreeNameText.setVisibility(View.INVISIBLE);
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 3:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerThreeNameText.setText(players.get(2).getDisplayName());
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 4:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerThreeNameText.setText(players.get(2).getDisplayName());
-                playerFourNameText.setText(players.get(3).getDisplayName());
-                break;
-            default:
-                Log.d(TAG, "Something bad happens: player size unknown");
-                break;
+    private void setPlayersNameOnView(List<Player> players, List<TextView> textViews) {
+        if (players.size() <= textViews.size()) {
+            Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
+            return;
+        }
+
+        for (int i = 0; i < players.size(); i++) {
+            textViews.get(i).setText(players.get(i).getDisplayName());
+            textViews.get(i).setVisibility(View.VISIBLE);
+        }
+
+        for(int j = players.size(); j < textViews.size(); j++) {
+            textViews.get(j).setVisibility(View.INVISIBLE);
         }
     }
 
-    private void setCurrentPlayerBackground(int index) {
-        switch (index) {
-            case 0:
-                playerOneNameText.setBackgroundColor(Color.GREEN);
-                playerTwoNameText.setBackgroundColor(Color.YELLOW);
-                playerThreeNameText.setBackgroundColor(Color.YELLOW);
-                playerFourNameText.setBackgroundColor(Color.YELLOW);
-                break;
-            case 1:
-                playerOneNameText.setBackgroundColor(Color.YELLOW);
-                playerTwoNameText.setBackgroundColor(Color.GREEN);
-                playerThreeNameText.setBackgroundColor(Color.YELLOW);
-                playerFourNameText.setBackgroundColor(Color.YELLOW);
-                break;
-            case 2:
-                playerOneNameText.setBackgroundColor(Color.YELLOW);
-                playerTwoNameText.setBackgroundColor(Color.YELLOW);
-                playerThreeNameText.setBackgroundColor(Color.GREEN);
-                playerFourNameText.setBackgroundColor(Color.YELLOW);
-                break;
-            case 3:
-                playerOneNameText.setBackgroundColor(Color.YELLOW);
-                playerTwoNameText.setBackgroundColor(Color.YELLOW);
-                playerThreeNameText.setBackgroundColor(Color.YELLOW);
-                playerFourNameText.setBackgroundColor(Color.GREEN);
-                break;
-            default:
-                break;
+    private void setCurrentPlayersBackground(int index, List<TextView> textViews) {
+        for (int i = 0; i < textViews.size(); i++) {
+            if (i == index) {
+                textViews.get(i).setBackgroundColor(Color.GREEN);
+            } else {
+                textViews.get(i).setBackgroundColor(Color.YELLOW);
+            }
         }
     }
 
-    private void nextRound() {
+    private void nextRound() {  // refactor this boilerplate code
         DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
-        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    GameEntry entry = task.getResult().toObject(GameEntry.class);
-                    assert entry != null;
-                    int index = entry.getPlayerTurnIndex();
-                    index++;
-                    if (index >= entry.getPlayers().size()) {
-                        index = 0;
-                    }
-
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("playerTurnIndex", index);
-                    docRef.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            Log.d(TAG, "updated success");
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "updated failed");
-                        }
-                    });
+        docRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                assert entry != null;
+                int index = entry.getPlayerTurnIndex();
+                index++;
+                if (index >= entry.getPlayers().size()) {
+                    index = 0;
                 }
+
+                Map<String, Object> map = new HashMap<>();
+                map.put("playerTurnIndex", index);
+                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
+                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
             }
         });
     }

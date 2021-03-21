@@ -2,7 +2,6 @@ package com.example.shutthebox.ui;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -21,18 +20,12 @@ import com.example.shutthebox.model.GameEntry;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
 import com.example.shutthebox.model.WoodenCard;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,110 +69,81 @@ public class GameRoomFragment extends Fragment {
         // Get current user profile
         firebaseFirestore.collection("users").document(
                 firebaseAuth.getCurrentUser().getUid()
-        ).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    player = task.getResult().toObject(Player.class);
-                }
+        ).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                player = task.getResult().toObject(Player.class);
             }
         });
 
-        //++ Room specific info
+        // Room specific info
         gameRoomNumber = activity.getIntent().getExtras().getString(GAME_ROOM_NO, "");
         String welcomeToRoom = getString(R.string.welcome_text) + " " + gameRoomNumber;
         gameRoomNumberText.setText(welcomeToRoom);
-        //-- Room specific info
 
         // Initialize the room page using room_1 info
         DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
-        docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    Room room1 = task.getResult().toObject(Room.class);
-                    assert room1 != null;
-                    List<Player> players = room1.getPlayers();
-                    setPlayersNameOnView(players);
-                }
+        docRefRoom1.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Room room1 = task.getResult().toObject(Room.class);
+                assert room1 != null;
+                List<Player> players = room1.getPlayers();
+                setPlayersNameOnView(players,
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
             }
         });
 
         // Add room_1 listener
-        docRefRoom1.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                if (error != null) {
-                    Log.d(TAG, "Event listener for room 1 failed");
+        docRefRoom1.addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.d(TAG, "Event listener for room 1 failed");
+            }
+
+            if (value != null && value.exists()) {
+                Room room1 = value.toObject(Room.class);
+                assert room1 != null;
+                List<Player> players = room1.getPlayers();
+                String gameEntryID = room1.getGameEntryID();
+
+                if (!leaveButtonPressed && players.size() == 0) {
+                    Intent intent = new Intent(activity.getApplicationContext(), Game.class);
+                    intent.putExtra(GAME_ROOM_ID, 1);
+                    intent.putExtra(GAME_ENTRY_ID, gameEntryID);
+                    startActivity(intent);
                 }
 
-                if (value != null && value.exists()) {
-                    Room room1 = value.toObject(Room.class);
-                    assert room1 != null;
-                    List<Player> players = room1.getPlayers();
-                    String gameEntryID = room1.getGameEntryID();
+                setPlayersNameOnView(players,
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
 
-                    if (!leaveButtonPressed && players.size() == 0) {
-                        Intent intent = new Intent(activity.getApplicationContext(), Game.class);
-                        intent.putExtra(GAME_ROOM_ID, 1);
-                        intent.putExtra(GAME_ENTRY_ID, gameEntryID);
-                        startActivity(intent);
-                    }
-
-                    setPlayersNameOnView(players);
-
-                } else {
-                    Log.d(TAG, "Current room 1 data is null or not exists");
-                }
+            } else {
+                Log.d(TAG, "Current room 1 data is null or not exists");
             }
         });
 
-        startGameButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        startGameButton.setOnClickListener(v -> docRefRoom1.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Room room = task.getResult().toObject(Room.class);
+                assert room != null;
+                List<Player> players = room.getPlayers();
 
-                docRefRoom1.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful() && task.getResult() != null) {
-                            Room room = task.getResult().toObject(Room.class);
-                            assert room != null;
-                            List<Player> players = room.getPlayers();
+                // new a GameEntry
+                String gameEntryID = newGameEntry(players, gameRoomNumber);
 
-                            // new a GameEntry
-                            String gameEntryID = newGameEntry(players, gameRoomNumber);
-
-                            // Delete all players in the room and set gameEntryID
-                            Map<String, Object> map = new HashMap<>();
-                            map.put("players", new ArrayList<>());
-                            map.put("gameEntryID", gameEntryID);
-                            docRefRoom1.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    Log.d(TAG, "updated success");
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    Log.d(TAG, "updated failed");
-                                }
-                            });
-                        }
-                    }
-                });
+                // Delete all players in the room and set gameEntryID
+                Map<String, Object> map = new HashMap<>();
+                map.put("players", new ArrayList<>());
+                map.put("gameEntryID", gameEntryID);
+                docRefRoom1.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
+                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
             }
-        });
+        }));
 
         // The user leaves the game room
-        leaveRoomButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "Somebody leaves the room");
-                leaveButtonPressed = true;
-                Intent intent = new Intent(activity.getApplicationContext(), LobbyActivity.class);
-                removePlayerFromGameRoom("room_1", player);
-                startActivity(intent);
-            }
+        leaveRoomButton.setOnClickListener(v -> {
+            Log.d(TAG, "Somebody leaves the room");
+            leaveButtonPressed = true;
+            Intent intent = new Intent(activity.getApplicationContext(), LobbyActivity.class);
+            removePlayerFromGameRoom("room_1", player);
+            startActivity(intent);
         });
 
         return view;
@@ -207,78 +171,37 @@ public class GameRoomFragment extends Fragment {
         removePlayerFromGameRoom(gameRoomNumber, player);
     }
 
-    private void setPlayersNameOnView(List<Player> players) {
-        switch (players.size()) {
-            case 0:
-                Log.d(TAG, "Something bad happens: there is no player");
-                break;
-            case 1:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerOneNameText.setVisibility(View.VISIBLE);
-                playerTwoNameText.setVisibility(View.INVISIBLE);
-                playerThreeNameText.setVisibility(View.INVISIBLE);
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 2:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerOneNameText.setVisibility(View.VISIBLE);
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerTwoNameText.setVisibility(View.VISIBLE);
-                playerThreeNameText.setVisibility(View.INVISIBLE);
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 3:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerOneNameText.setVisibility(View.VISIBLE);
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerTwoNameText.setVisibility(View.VISIBLE);
-                playerThreeNameText.setText(players.get(2).getDisplayName());
-                playerThreeNameText.setVisibility(View.VISIBLE);
-                playerFourNameText.setVisibility(View.INVISIBLE);
-                break;
-            case 4:
-                playerOneNameText.setText(players.get(0).getDisplayName());
-                playerOneNameText.setVisibility(View.VISIBLE);
-                playerTwoNameText.setText(players.get(1).getDisplayName());
-                playerTwoNameText.setVisibility(View.VISIBLE);
-                playerThreeNameText.setText(players.get(2).getDisplayName());
-                playerThreeNameText.setVisibility(View.VISIBLE);
-                playerFourNameText.setText(players.get(3).getDisplayName());
-                playerFourNameText.setVisibility(View.VISIBLE);
-                break;
-            default:
-                Log.d(TAG, "Something bad happens: player size unknown");
-                break;
+    private void setPlayersNameOnView(List<Player> players, List<TextView> textViews) {
+        if (players.size() <= textViews.size()) {
+            Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
+            return;
+        }
+
+        for (int i = 0; i < players.size(); i++) {
+            textViews.get(i).setText(players.get(i).getDisplayName());
+            textViews.get(i).setVisibility(View.VISIBLE);
+        }
+
+        for(int j = players.size(); j < textViews.size(); j++) {
+            textViews.get(j).setVisibility(View.INVISIBLE);
         }
     }
 
     private void removePlayerFromGameRoom(String roomID, @NonNull Player player) {
         DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
-        docRefRoom.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    Room room = task.getResult().toObject(Room.class);
-                    List<Player> players = room.getPlayers();
-                    if (players == null || players.size() == 0) {
-                        return;
-                    }
-                    players.remove(player);
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("players", players);
-
-                    docRefRoom.update(map).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            Log.d(TAG, "update success");
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.d(TAG, "update fail");
-                        }
-                    });
+        docRefRoom.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult() != null) {
+                Room room = task.getResult().toObject(Room.class);
+                List<Player> players = room.getPlayers();
+                if (players == null || players.size() == 0) {
+                    return;
                 }
+                players.remove(player);
+                Map<String, Object> map = new HashMap<>();
+                map.put("players", players);
+
+                docRefRoom.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "update success"))
+                        .addOnFailureListener(e -> Log.d(TAG, "update fail"));
             }
         });
     }
