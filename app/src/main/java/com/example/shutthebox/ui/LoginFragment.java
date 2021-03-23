@@ -23,9 +23,7 @@ import com.google.firebase.auth.FirebaseAuth;
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "TAG_LOGIN";
-    EditText email, password;
-    Button loginButton;
-    TextView createAccountText;
+    private EditText email, password;
     FirebaseAuth firebaseAuth;
 
     @Nullable
@@ -38,13 +36,13 @@ public class LoginFragment extends Fragment {
 
         email = view.findViewById(R.id.emailEditText);
         password = view.findViewById(R.id.passwordEditText);
-        loginButton = view.findViewById(R.id.loginButton);
-        createAccountText = view.findViewById(R.id.createAccountText);
+        Button loginButton = view.findViewById(R.id.loginButton);
+        TextView createAccountText = view.findViewById(R.id.createAccountText);
         firebaseAuth = FirebaseAuth.getInstance();
 
         loginButton.setOnClickListener(v -> {
-            String _email = email.getText().toString().trim();
-            String _password = password.getText().toString().trim();
+            final String _email = email.getText().toString().trim();
+            final String _password = password.getText().toString().trim();
 
             if (TextUtils.isEmpty(_email)) {
                 email.setError("Email is required!");

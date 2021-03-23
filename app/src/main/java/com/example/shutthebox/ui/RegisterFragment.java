@@ -27,9 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 public class RegisterFragment extends Fragment {
 
     private static final String TAG = "TAG_REGISTER";
-    EditText email, password, displayName;
-    TextView backToLogin;
-    Button registerButton;
+    private EditText email, password, displayName;
     FirebaseAuth firebaseAuth;
     FirebaseFirestore firebaseFirestore;
 
@@ -44,8 +42,8 @@ public class RegisterFragment extends Fragment {
         email = view.findViewById(R.id.createAccountEmailEditText);
         password = view.findViewById(R.id.createAccountPasswordEditText);
         displayName = view.findViewById(R.id.createAccountNameEditText);
-        backToLogin = view.findViewById(R.id.back_to_login);
-        registerButton = view.findViewById(R.id.registerButton);
+        TextView backToLogin = view.findViewById(R.id.back_to_login);
+        Button registerButton = view.findViewById(R.id.registerButton);
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
 
@@ -54,9 +52,9 @@ public class RegisterFragment extends Fragment {
         }
 
         registerButton.setOnClickListener(v -> {
-            String _email = email.getText().toString().trim();
-            String _password = password.getText().toString().trim();
-            String _displayName = displayName.getText().toString().trim();
+            final String _email = email.getText().toString().trim();
+            final String _password = password.getText().toString().trim();
+            final String _displayName = displayName.getText().toString().trim();
 
             if (TextUtils.isEmpty(_email)) {
                 email.setError("Email is required!");
@@ -82,9 +80,9 @@ public class RegisterFragment extends Fragment {
                             .addOnFailureListener(e -> Log.d(TAG, "onFailure: Email not sent " + e.getMessage()));
 
                     Toast.makeText(activity.getApplicationContext(), "User Created.", Toast.LENGTH_SHORT).show();
-                    String userID = firebaseUser.getUid();
-                    DocumentReference documentReference = firebaseFirestore.collection("users").document(userID);
-                    Player userProfile = new Player(_email, _displayName, 0);
+                    final String userID = firebaseUser.getUid();
+                    final DocumentReference documentReference = firebaseFirestore.collection("users").document(userID);
+                    final Player userProfile = new Player(_email, _displayName, 0);
                     documentReference.set(userProfile).addOnSuccessListener(aVoid -> Log.d(TAG, "User profile Saved: " + userID))
                             .addOnFailureListener(e -> Log.d(TAG, "Failed to save user profile: " + e.getMessage()));
                 } else {

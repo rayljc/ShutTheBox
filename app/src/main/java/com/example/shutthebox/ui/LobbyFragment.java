@@ -33,14 +33,15 @@ public class LobbyFragment extends Fragment {
     private static final String GAME_ROOM_NO = "game_room_number";
     private static final String USERS_COLLECTION = "users";
     private static final String ROOMS_COLLECTION = "rooms";
+    private static final String ROOM_ONE = "room_1";
     private static final int MAX_PLAYER_NUMBER = 4;
-    Button joinRoomOneButton, joinRoomTwoButton, switchAccountButton;
+    private TextView roomName_1;
+    private TextView roomCurrentPlayers_1;
+    private TextView roomAvailable_1;
+    private Player player;
+    private Boolean room1Available;
     FirebaseAuth firebaseAuth;
     FirebaseFirestore firebaseFirestore;
-    TextView roomTitle_1, roomName_1, roomCurrentPlayers_1, roomAvailable_1;
-    TextView roomTitle_2, roomName_2, roomCurrentPlayers_2, roomAvailable_2;
-    Player player;
-    Boolean room1Available;
 
     @Nullable
     @Override
@@ -51,18 +52,12 @@ public class LobbyFragment extends Fragment {
 
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
-        joinRoomOneButton = view.findViewById(R.id.join_room_1_button);
-        joinRoomTwoButton = view.findViewById(R.id.join_room_2_button);
-        switchAccountButton = view.findViewById(R.id.lobby_switch_account_button);
+        Button joinRoomOneButton = view.findViewById(R.id.join_room_1_button);
+        Button switchAccountButton = view.findViewById(R.id.lobby_switch_account_button);
 
-        roomTitle_1 = view.findViewById(R.id.game_room_1_title);
         roomName_1 = view.findViewById(R.id.game_room_1_name);
         roomCurrentPlayers_1 = view.findViewById(R.id.game_room_1_cp);
         roomAvailable_1 = view.findViewById(R.id.game_room_1_status);
-        roomTitle_2 = view.findViewById(R.id.game_room_2_title);
-        roomName_2 = view.findViewById(R.id.game_room_2_name);
-        roomCurrentPlayers_2 = view.findViewById(R.id.game_room_2_cp);
-        roomAvailable_2 = view.findViewById(R.id.game_room_2_status);
 
         // Get current user profile
         firebaseFirestore.collection(USERS_COLLECTION).document(
@@ -74,15 +69,15 @@ public class LobbyFragment extends Fragment {
         });
 
         // Initialize the lobby page using room_1 info
-        DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
+        final DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document(ROOM_ONE);
         docRefRoom1.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                Room room1 = task.getResult().toObject(Room.class);
+                final Room room1 = task.getResult().toObject(Room.class);
                 assert room1 != null;
-                String gameName = "Game: " + room1.getGameName();
-                List<Player> players = room1.getPlayers();
-                String numberOfPlayersText = "Current Players: " + players.size();
-                String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
+                final String gameName = "Game: " + room1.getGameName();
+                final List<Player> players = room1.getPlayers();
+                final String numberOfPlayersText = "Current Players: " + players.size();
+                final String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                 room1Available = room1.getAvailable();
                 roomName_1.setText(gameName);
                 roomAvailable_1.setText(statusText);
@@ -98,23 +93,23 @@ public class LobbyFragment extends Fragment {
 
             if (value != null && value.exists()) {
                 Log.d(TAG, "Current room 1 data" + value.getData());
-                Room room1 = value.toObject(Room.class);
+                final Room room1 = value.toObject(Room.class);
                 assert room1 != null;
-                List<Player> players = room1.getPlayers();
-                String numberOfPlayersText = "Current Players: " + players.size();
+                final List<Player> players = room1.getPlayers();
+                final String numberOfPlayersText = "Current Players: " + players.size();
                 if (players.size() >= MAX_PLAYER_NUMBER) {
-                    Map<String, Object> map = new HashMap<>();
+                    final Map<String, Object> map = new HashMap<>();
                     map.put("available", false);
                     docRefRoom1.update(map).addOnCompleteListener(task -> Log.d(TAG, "room_1 status set to unavailable"))
                             .addOnFailureListener(e -> Log.d(TAG, "Failed to update room_1 status"));
                 } else {
-                    Map<String, Object> map = new HashMap<>();
+                    final Map<String, Object> map = new HashMap<>();
                     map.put("available", true);
                     docRefRoom1.update(map).addOnCompleteListener(task -> Log.d(TAG, "room_1 status set to available"))
                             .addOnFailureListener(e -> Log.d(TAG, "Failed to update room_1 status"));
                 }
 
-                String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
+                final String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
                 room1Available = room1.getAvailable();
 
                 // Only update player numbers and room status
@@ -130,8 +125,8 @@ public class LobbyFragment extends Fragment {
                 return;
             }
             Intent intent = new Intent(activity.getApplicationContext(), GameRoomActivity.class);
-            intent.putExtra(GAME_ROOM_NO, "room_1");
-            addPlayerToGameRoom("room_1", player);
+            intent.putExtra(GAME_ROOM_NO, ROOM_ONE);
+            addPlayerToGameRoom(ROOM_ONE, player);
             startActivity(intent);
         });
 
@@ -146,18 +141,18 @@ public class LobbyFragment extends Fragment {
     }
 
 
-    private void addPlayerToGameRoom(String roomID, @NonNull Player player) {
-        DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
+    private void addPlayerToGameRoom(@NonNull final String roomID, @NonNull final Player player) {
+        final DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
         docRefRoom.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                Room room = task.getResult().toObject(Room.class);
+                final Room room = task.getResult().toObject(Room.class);
                 assert room != null;
                 List<Player> players = room.getPlayers();
                 if (players == null || players.size() == 0) {
                     players = new ArrayList<>();
                 }
                 players.add(player);
-                Map<String, Object> map = new HashMap<>();
+                final Map<String, Object> map = new HashMap<>();
                 map.put("players", players);
 
                 docRefRoom.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
@@ -170,14 +165,14 @@ public class LobbyFragment extends Fragment {
         /**
          * Do not execute this method. Those data is already there now!
          */
-        CollectionReference collectionReference = firebaseFirestore.collection(ROOMS_COLLECTION);
+        final CollectionReference collectionReference = firebaseFirestore.collection(ROOMS_COLLECTION);
         if (firebaseFirestore != null) {
-            Room room = new Room("room_1", new ArrayList<Player>(), "Shut the box", true, "");
+            final Room room = new Room("room_1", new ArrayList<Player>(), "Shut the box", true, "");
             collectionReference.document("room_1").set(room);
         }
 
         if (firebaseFirestore != null) {
-            Room room = new Room("room_2", new ArrayList<Player>(), "Shut the box", false, "");
+            final Room room = new Room("room_2", new ArrayList<Player>(), "Shut the box", false, "");
             collectionReference.document("room_2").set(room);
         }
     }

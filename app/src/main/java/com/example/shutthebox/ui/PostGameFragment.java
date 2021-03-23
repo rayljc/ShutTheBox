@@ -18,8 +18,6 @@ import com.example.shutthebox.R;
 public class PostGameFragment extends Fragment {
 
     private static final String LOSER_NAME = "LOSER_NAME";
-    Button goToLobbyButton;
-    TextView loserNameText;
 
     @Nullable
     @Override
@@ -28,10 +26,10 @@ public class PostGameFragment extends Fragment {
 
         Activity activity = requireActivity();
 
-        loserNameText = view.findViewById(R.id.end_of_game_loser_name);
-        goToLobbyButton = view.findViewById(R.id.go_to_lobby_button);
+        TextView loserNameText = view.findViewById(R.id.end_of_game_loser_name);
+        Button goToLobbyButton = view.findViewById(R.id.go_to_lobby_button);
 
-        String loserName = activity.getIntent().getExtras().getString(LOSER_NAME);
+        final String loserName = activity.getIntent().getExtras().getString(LOSER_NAME);
         loserNameText.setText(loserName);
 
         goToLobbyButton.setOnClickListener(v -> startActivity(new Intent(activity.getApplicationContext(), LobbyActivity.class)));

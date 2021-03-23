@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.shutthebox.model.GameEntry;
@@ -36,34 +37,29 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     private static final String TAG = "TAG_GAME";
     private static final String LOSER_NAME = "LOSER_NAME";
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
+    private static final String USERS_COLLECTION = "users";
     private static final String GAMES_COLLECTION = "games";
     private static final double SHAKE_THRESHOLD = 5.0;
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private double lastX, lastY, lastZ;
     private boolean lastInitialized = false;
-
-    Random random = new Random();
-    Button rollButton, finishButton, quitButton;
-    Button[] woodenCards = new Button[13];  // 13 instead of 12, can be a TO-DO item later
-    ImageView dice1, dice2;
-    TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
-    FirebaseFirestore firebaseFirestore;
-    FirebaseAuth firebaseAuth;
-
+    private final Random random = new Random();
+    private final Button[] woodenCards = new Button[13];  // 13 instead of 12, can be a TO-DO item later
+    private ImageView dice1, dice2;
+    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
     private boolean gameInitialized = false;
-
     private Player player;  // invariant got from cloud db
     private String gameEntryID;  // invariant got from cloud db
     private List<Player> playerList;  // invariant got from cloud db
-
     private int currentPlayerIndex = 0;  // Use as a copy of cloud db state
     private boolean[] woodenCardsMarked = new boolean[13];  // Use as a copy of cloud db state
-
     private boolean diceRolled = false;  // variable specific to each player
     private int diceOnePoint = 1;  // variable specific to each player, used in game result checking
     private int diceTwoPoint = 6;  // variable specific to each player, used in game result checking
     private List<Integer> currentMarkedCards = new ArrayList<>();  // variable specific to each player, used in game result checking
+    FirebaseFirestore firebaseFirestore;
+    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,9 +69,9 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
 
-        rollButton = findViewById(R.id.game_roll_dice_button);
-        finishButton = findViewById(R.id.game_finish_button);
-        quitButton = findViewById(R.id.game_quit_button);
+        Button rollButton = findViewById(R.id.game_roll_dice_button);
+        Button finishButton = findViewById(R.id.game_finish_button);
+        Button quitButton = findViewById(R.id.game_quit_button);
         dice1 = findViewById(R.id.dice_image_view_1);
         dice2 = findViewById(R.id.dice_image_view_2);
 
@@ -85,7 +81,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         playerFourNameText = findViewById(R.id.game_player_name_four);
 
         // Get current user profile
-        firebaseFirestore.collection("users").document(
+        firebaseFirestore.collection(USERS_COLLECTION).document(
                 firebaseAuth.getCurrentUser().getUid()
         ).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
@@ -97,10 +93,10 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         gameEntryID = getIntent().getExtras().getString(GAME_ENTRY_ID, "");
 
         // Initialize the page using GameEntry info
-        DocumentReference gameEntryDocRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
+        final DocumentReference gameEntryDocRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
         gameEntryDocRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                final GameEntry entry = task.getResult().toObject(GameEntry.class);
                 assert entry != null;
                 playerList = entry.getPlayers();
                 setPlayersNameOnView(playerList,
@@ -118,10 +114,10 @@ public class Game extends AppCompatActivity implements SensorEventListener {
             }
 
             if (value != null && value.exists()) {
-                GameEntry entry = value.toObject(GameEntry.class);
+                final GameEntry entry = value.toObject(GameEntry.class);
                 assert entry != null;
 
-                Player loser = entry.getLoser();
+                final Player loser = entry.getLoser();
                 if (loser != null) {
                     goToPostGamePage(loser);
                 }
@@ -146,9 +142,9 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         });
 
         for (int i = 1; i <= 12; i++) {  // Can be a TO-DO item later
-            String _woodenCardID = "wooden_card_" + i;
+            final String _woodenCardID = "wooden_card_" + i;
             int _resourceID = getResources().getIdentifier(_woodenCardID, "id", getPackageName());
-            woodenCards[i] = (Button) findViewById(_resourceID);
+            woodenCards[i] = findViewById(_resourceID);
             woodenCards[i].setBackgroundColor(Color.MAGENTA);
 
             int finalI = i;
@@ -204,23 +200,23 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         gameInitialized = true;
     }
 
-    private void goToPostGamePage(Player loser) {
+    private void goToPostGamePage(@NonNull final Player loser) {
         Intent intent = new Intent(getApplicationContext(), PostGameActivity.class);
         intent.putExtra(LOSER_NAME, loser.getDisplayName());
         startActivity(intent);
     }
 
     private void updateWoodenCardState(int finalI) {
-        DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
+        final DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                final GameEntry entry = task.getResult().toObject(GameEntry.class);
                 assert entry != null;
-                List<WoodenCard> woodenCards = entry.getWoodenCards();
+                final List<WoodenCard> woodenCards = entry.getWoodenCards();
                 int index = finalI - 1;  // Could be a TO-DO item
                 woodenCards.get(index).setMarked(true);
 
-                Map<String, Object> map = new HashMap<>();
+                final Map<String, Object> map = new HashMap<>();
                 map.put("woodenCards", woodenCards);
 
                 docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
@@ -230,14 +226,14 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     }
 
     private void updateLoserInfo() {
-        DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
-        Map<String, Object> map = new HashMap<>();
+        final DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
+        final Map<String, Object> map = new HashMap<>();
         map.put("loser", player);
         docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
                 .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
     }
 
-    private boolean checkResult(int diceOnePoint, int diceTwoPoint, List<Integer> currentMarkedCards) {
+    private boolean checkResult(int diceOnePoint, int diceTwoPoint, @NonNull final List<Integer> currentMarkedCards) {
         int sum = currentMarkedCards.stream().reduce(0, Integer::sum);
         return sum == diceOnePoint + diceTwoPoint;
     }
@@ -259,8 +255,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     }
 
     private void updateDicePoints(int diceOnePoint, int diceTwoPoint) {
-        DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
-        Map<String, Object> map = new HashMap<>();
+        final DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
+        final Map<String, Object> map = new HashMap<>();
         map.put("dice1", diceOnePoint);
         map.put("dice2", diceTwoPoint);
         docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
@@ -271,7 +267,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         return random.nextInt(6) + 1;
     }
 
-    private void refreshDiceImage(ImageView dice, int point) {
+    private void refreshDiceImage(@NonNull final ImageView dice, int point) {
         switch (point) {
             case 1:
                 dice.setImageResource(R.drawable.dice1);
@@ -296,8 +292,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         }
     }
 
-    private void setPlayersNameOnView(List<Player> players, List<TextView> textViews) {
-        if (players.size() <= textViews.size()) {
+    private void setPlayersNameOnView(@NonNull final List<Player> players, @NonNull final List<TextView> textViews) {
+        if (players.size() > textViews.size()) {
             Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
             return;
         }
@@ -312,7 +308,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         }
     }
 
-    private void setCurrentPlayersBackground(int index, List<TextView> textViews) {
+    private void setCurrentPlayersBackground(int index, @NonNull final List<TextView> textViews) {
         for (int i = 0; i < textViews.size(); i++) {
             if (i == index) {
                 textViews.get(i).setBackgroundColor(Color.GREEN);
@@ -322,11 +318,11 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         }
     }
 
-    private void nextRound() {  // refactor this boilerplate code
-        DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
+    private void nextRound() {
+        final DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
         docRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                GameEntry entry = task.getResult().toObject(GameEntry.class);
+                final GameEntry entry = task.getResult().toObject(GameEntry.class);
                 assert entry != null;
                 int index = entry.getPlayerTurnIndex();
                 index++;
@@ -334,7 +330,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                     index = 0;
                 }
 
-                Map<String, Object> map = new HashMap<>();
+                final Map<String, Object> map = new HashMap<>();
                 map.put("playerTurnIndex", index);
                 docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
                         .addOnFailureListener(e -> Log.d(TAG, "updated failed"));

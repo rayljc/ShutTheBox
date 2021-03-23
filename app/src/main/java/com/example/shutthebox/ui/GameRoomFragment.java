@@ -37,15 +37,15 @@ public class GameRoomFragment extends Fragment {
     private static final String GAME_ROOM_ID = "GAME_ROOM_ID";
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
     private static final String GAME_ROOM_NO = "game_room_number";
+    private static final String USERS_COLLECTION = "users";
     private static final String ROOMS_COLLECTION = "rooms";
+    private static final String GAMES_COLLECTION = "games";
     private boolean leaveButtonPressed = false;
-    TextView gameRoomNumberText;
-    TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
-    Button startGameButton, leaveRoomButton;
+    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
+    private Player player;
+    private String gameRoomNumber;
     FirebaseFirestore firebaseFirestore;
     FirebaseAuth firebaseAuth;
-    Player player;
-    String gameRoomNumber;
 
     @Nullable
     @Override
@@ -54,20 +54,20 @@ public class GameRoomFragment extends Fragment {
 
         Activity activity = requireActivity();
 
-        gameRoomNumberText = view.findViewById(R.id.game_room_number_text);
+        TextView gameRoomNumberText = view.findViewById(R.id.game_room_number_text);
 
         playerOneNameText = view.findViewById(R.id.gr_player1_name);
         playerTwoNameText = view.findViewById(R.id.gr_player2_name);
         playerThreeNameText = view.findViewById(R.id.gr_player3_name);
         playerFourNameText = view.findViewById(R.id.gr_player4_name);
 
-        startGameButton = view.findViewById(R.id.room_start_button);
-        leaveRoomButton = view.findViewById(R.id.room_leave_button);
+        Button startGameButton = view.findViewById(R.id.room_start_button);
+        Button leaveRoomButton = view.findViewById(R.id.room_leave_button);
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
 
         // Get current user profile
-        firebaseFirestore.collection("users").document(
+        firebaseFirestore.collection(USERS_COLLECTION).document(
                 firebaseAuth.getCurrentUser().getUid()
         ).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
@@ -81,12 +81,12 @@ public class GameRoomFragment extends Fragment {
         gameRoomNumberText.setText(welcomeToRoom);
 
         // Initialize the room page using room_1 info
-        DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
+        final DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
         docRefRoom1.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                Room room1 = task.getResult().toObject(Room.class);
+                final Room room1 = task.getResult().toObject(Room.class);
                 assert room1 != null;
-                List<Player> players = room1.getPlayers();
+                final List<Player> players = room1.getPlayers();
                 setPlayersNameOnView(players,
                         Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
             }
@@ -99,12 +99,15 @@ public class GameRoomFragment extends Fragment {
             }
 
             if (value != null && value.exists()) {
-                Room room1 = value.toObject(Room.class);
+                final Room room1 = value.toObject(Room.class);
                 assert room1 != null;
-                List<Player> players = room1.getPlayers();
-                String gameEntryID = room1.getGameEntryID();
+                final List<Player> players = room1.getPlayers();
+                final String gameEntryID = room1.getGameEntryID();
 
-                if (!leaveButtonPressed && players.size() == 0) {
+                if (players.size() == 0) {
+                    if (leaveButtonPressed) {
+                        return;
+                    }
                     Intent intent = new Intent(activity.getApplicationContext(), Game.class);
                     intent.putExtra(GAME_ROOM_ID, 1);
                     intent.putExtra(GAME_ENTRY_ID, gameEntryID);
@@ -121,15 +124,15 @@ public class GameRoomFragment extends Fragment {
 
         startGameButton.setOnClickListener(v -> docRefRoom1.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                Room room = task.getResult().toObject(Room.class);
+                final Room room = task.getResult().toObject(Room.class);
                 assert room != null;
-                List<Player> players = room.getPlayers();
+                final List<Player> players = room.getPlayers();
 
                 // new a GameEntry
-                String gameEntryID = newGameEntry(players, gameRoomNumber);
+                final String gameEntryID = newGameEntry(players, gameRoomNumber);
 
                 // Delete all players in the room and set gameEntryID
-                Map<String, Object> map = new HashMap<>();
+                final Map<String, Object> map = new HashMap<>();
                 map.put("players", new ArrayList<>());
                 map.put("gameEntryID", gameEntryID);
                 docRefRoom1.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
@@ -139,8 +142,8 @@ public class GameRoomFragment extends Fragment {
 
         // The user leaves the game room
         leaveRoomButton.setOnClickListener(v -> {
-            Log.d(TAG, "Somebody leaves the room");
             leaveButtonPressed = true;
+            Log.d(TAG, "Somebody leaves the room");
             Intent intent = new Intent(activity.getApplicationContext(), LobbyActivity.class);
             removePlayerFromGameRoom("room_1", player);
             startActivity(intent);
@@ -149,17 +152,17 @@ public class GameRoomFragment extends Fragment {
         return view;
     }
 
-    private String newGameEntry(List<Player> players, String gameRoomNumber) {
-        String id = UUID.randomUUID().toString();
-        List<WoodenCard> woodenCards = new ArrayList<>();
+    private String newGameEntry(@NonNull final List<Player> players, @NonNull final String gameRoomNumber) {
+        final String id = UUID.randomUUID().toString();
+        final List<WoodenCard> woodenCards = new ArrayList<>();
         for (int i = 1; i <= 12; i++) {
             woodenCards.add(new WoodenCard(i, false));
         }
 
-        GameEntry gameEntry = new GameEntry(id, woodenCards, 1, 6,
+        final GameEntry gameEntry = new GameEntry(id, woodenCards, 1, 6,
                 players, 0, null, gameRoomNumber);
 
-        firebaseFirestore.collection("games").document(id).set(gameEntry);
+        firebaseFirestore.collection(GAMES_COLLECTION).document(id).set(gameEntry);
 
         return id;
     }
@@ -171,8 +174,8 @@ public class GameRoomFragment extends Fragment {
         removePlayerFromGameRoom(gameRoomNumber, player);
     }
 
-    private void setPlayersNameOnView(List<Player> players, List<TextView> textViews) {
-        if (players.size() <= textViews.size()) {
+    private void setPlayersNameOnView(@NonNull final List<Player> players, @NonNull final List<TextView> textViews) {
+        if (players.size() > textViews.size()) {
             Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
             return;
         }
@@ -187,17 +190,18 @@ public class GameRoomFragment extends Fragment {
         }
     }
 
-    private void removePlayerFromGameRoom(String roomID, @NonNull Player player) {
-        DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
+    private void removePlayerFromGameRoom(@NonNull final String roomID, @NonNull final Player player) {
+        final DocumentReference docRefRoom = firebaseFirestore.collection(ROOMS_COLLECTION).document(roomID);
         docRefRoom.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
-                Room room = task.getResult().toObject(Room.class);
-                List<Player> players = room.getPlayers();
+                final Room room = task.getResult().toObject(Room.class);
+                assert room != null;
+                final List<Player> players = room.getPlayers();
                 if (players == null || players.size() == 0) {
                     return;
                 }
                 players.remove(player);
-                Map<String, Object> map = new HashMap<>();
+                final Map<String, Object> map = new HashMap<>();
                 map.put("players", players);
 
                 docRefRoom.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "update success"))
