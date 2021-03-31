@@ -6,6 +6,6 @@ How to run the code: Download the code from GitHub, unzip it, and open the proje
 Run the app in Android Studio, and you should be good to go.
 
 One can login with email "nturay0321@gmail.com" and password "test0000". Or consider register your 
-own account. Firebase should sent an email to you when registering.
+own account. Firebase shall send an email to you when registering.
 
 Note: please add lombok plugin to your Android Studio if you haven't done so: https://projectlombok.org/setup/android
