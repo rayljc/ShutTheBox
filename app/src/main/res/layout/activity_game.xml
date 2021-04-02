@@ -197,18 +197,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/game_player_name_two" />
 
-    <TextView
-        android:id="@+id/game_player_name_four"
-        android:layout_width="198dp"
-        android:layout_height="36dp"
-        android:layout_marginStart="15dp"
-        android:layout_marginTop="15dp"
-        android:text="@string/player_1_name"
-        android:textAlignment="viewStart"
-        android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/game_player_name_three" />
-
     <ImageView
         android:id="@+id/dice_image_view_1"
         android:layout_width="80dp"

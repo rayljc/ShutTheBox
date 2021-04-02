@@ -21,7 +21,6 @@ import com.example.shutthebox.model.GameEntry;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.WoodenCard;
 import com.example.shutthebox.ui.PostGameActivity;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -39,34 +38,33 @@ public class Game extends AppCompatActivity implements SensorEventListener {
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
     private static final String USERS_COLLECTION = "users";
     private static final String GAMES_COLLECTION = "games";
+    private static final String PLAYER_ID = "player_id";
     private static final double SHAKE_THRESHOLD = 5.0;
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private double lastX, lastY, lastZ;
-    private boolean lastInitialized = false;
+    private boolean sensorInitialized = false;
     private final Random random = new Random();
-    private final Button[] woodenCards = new Button[13];  // 13 instead of 12, can be a TO-DO item later
+    private final Button[] woodenCards = new Button[13];
     private ImageView dice1, dice2;
-    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
+    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText;
     private boolean gameInitialized = false;
     private Player player;  // invariant got from cloud db
     private String gameEntryID;  // invariant got from cloud db
     private List<Player> playerList;  // invariant got from cloud db
     private int currentPlayerIndex = 0;  // Use as a copy of cloud db state
-    private boolean[] woodenCardsMarked = new boolean[13];  // Use as a copy of cloud db state
+    private final boolean[] woodenCardsMarked = new boolean[13];  // Use as a copy of cloud db state
     private boolean diceRolled = false;  // variable specific to each player
     private int diceOnePoint = 1;  // variable specific to each player, used in game result checking
     private int diceTwoPoint = 6;  // variable specific to each player, used in game result checking
     private List<Integer> currentMarkedCards = new ArrayList<>();  // variable specific to each player, used in game result checking
     FirebaseFirestore firebaseFirestore;
-    FirebaseAuth firebaseAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-        firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
 
         Button rollButton = findViewById(R.id.game_roll_dice_button);
@@ -78,19 +76,18 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         playerOneNameText = findViewById(R.id.game_player_name_one);
         playerTwoNameText = findViewById(R.id.game_player_name_two);
         playerThreeNameText = findViewById(R.id.game_player_name_three);
-        playerFourNameText = findViewById(R.id.game_player_name_four);
 
-        // Get current user profile
+        // GameEntry specific info
+        gameEntryID = getIntent().getExtras().getString(GAME_ENTRY_ID, "");
+
+        // Get current user profile and assign it to variable "player"
         firebaseFirestore.collection(USERS_COLLECTION).document(
-                firebaseAuth.getCurrentUser().getUid()
+                getIntent().getExtras().getString(PLAYER_ID, "")
         ).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult() != null) {
                 player = task.getResult().toObject(Player.class);
             }
         });
-
-        // GameEntry specific info
-        gameEntryID = getIntent().getExtras().getString(GAME_ENTRY_ID, "");
 
         // Initialize the page using GameEntry info
         final DocumentReference gameEntryDocRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
@@ -100,10 +97,10 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 assert entry != null;
                 playerList = entry.getPlayers();
                 setPlayersNameOnView(playerList,
-                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText));
                 currentPlayerIndex = entry.getPlayerTurnIndex();
                 setCurrentPlayersBackground(currentPlayerIndex,
-                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText));
             }
         });
 
@@ -134,14 +131,13 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
                 currentPlayerIndex = entry.getPlayerTurnIndex();
                 setCurrentPlayersBackground(currentPlayerIndex,
-                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
-
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText));
             } else {
                 Log.d(TAG, "Current GameEntry is null or not exists");
             }
         });
 
-        for (int i = 1; i <= 12; i++) {  // Can be a TO-DO item later
+        for (int i = 1; i <= 12; i++) {
             final String _woodenCardID = "wooden_card_" + i;
             int _resourceID = getResources().getIdentifier(_woodenCardID, "id", getPackageName());
             woodenCards[i] = findViewById(_resourceID);
@@ -176,10 +172,9 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 return;
             }
 
-            // Check the result
             boolean isLegal = checkResult(diceOnePoint, diceTwoPoint, currentMarkedCards);
             if (!isLegal) {
-                updateLoserInfo();  // update Loser info and the listener would do the rest.
+                updateLoserInfo();
             } else {
                 nextRound();
                 diceRolled = false;
@@ -188,7 +183,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         });
 
         quitButton.setOnClickListener(v -> {
-            Log.d(TAG, "Somebody quits the game");
+            Log.d(TAG, String.format("%s quits the game", player.getDisplayName()));
             updateLoserInfo();
         });
 
@@ -213,14 +208,14 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 final GameEntry entry = task.getResult().toObject(GameEntry.class);
                 assert entry != null;
                 final List<WoodenCard> woodenCards = entry.getWoodenCards();
-                int index = finalI - 1;  // Could be a TO-DO item
+                int index = finalI - 1;
                 woodenCards.get(index).setMarked(true);
 
                 final Map<String, Object> map = new HashMap<>();
                 map.put("woodenCards", woodenCards);
 
-                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
-                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
+                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "woodenCards update succeeded"))
+                        .addOnFailureListener(e -> Log.d(TAG, "woodenCards update failed"));
             }
         });
     }
@@ -229,8 +224,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         final DocumentReference docRef = firebaseFirestore.collection(GAMES_COLLECTION).document(gameEntryID);
         final Map<String, Object> map = new HashMap<>();
         map.put("loser", player);
-        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
-                .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
+        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "loser update succeeded"))
+                .addOnFailureListener(e -> Log.d(TAG, "loser update failed"));
     }
 
     private boolean checkResult(int diceOnePoint, int diceTwoPoint, @NonNull final List<Integer> currentMarkedCards) {
@@ -250,7 +245,6 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         diceTwoPoint = rollDice();
 
         updateDicePoints(diceOnePoint, diceTwoPoint);
-
         diceRolled = true;
     }
 
@@ -259,8 +253,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         final Map<String, Object> map = new HashMap<>();
         map.put("dice1", diceOnePoint);
         map.put("dice2", diceTwoPoint);
-        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "updated success"))
-                .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
+        docRef.update(map).addOnCompleteListener(task -> Log.d(TAG, "dice points update succeeded"))
+                .addOnFailureListener(e -> Log.d(TAG, "dice points update failed"));
     }
 
     private int rollDice() {
@@ -294,7 +288,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
     private void setPlayersNameOnView(@NonNull final List<Player> players, @NonNull final List<TextView> textViews) {
         if (players.size() > textViews.size()) {
-            Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
+            Log.d(TAG, "Too many players! Only at most 3 players can be in a game");
             return;
         }
 
@@ -303,7 +297,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
             textViews.get(i).setVisibility(View.VISIBLE);
         }
 
-        for(int j = players.size(); j < textViews.size(); j++) {
+        for (int j = players.size(); j < textViews.size(); j++) {
             textViews.get(j).setVisibility(View.INVISIBLE);
         }
     }
@@ -332,8 +326,8 @@ public class Game extends AppCompatActivity implements SensorEventListener {
 
                 final Map<String, Object> map = new HashMap<>();
                 map.put("playerTurnIndex", index);
-                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
-                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
+                docRef.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "playerTurnIndex update succeeded"))
+                        .addOnFailureListener(e -> Log.d(TAG, "playerTurnIndex update failed"));
             }
         });
     }
@@ -343,7 +337,6 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         if (playerList == null || player == null || !gameInitialized) {
             return;
         }
-
         if (playerList.indexOf(player) != currentPlayerIndex) {
             return;
         }
@@ -351,8 +344,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         double currentX = event.values[0];
         double currentY = event.values[1];
         double currentZ = event.values[2];
-
-        if (lastInitialized) {
+        if (sensorInitialized) {
             double diffX = Math.abs(lastX - currentX);
             double diffY = Math.abs(lastY - currentY);
             double diffZ = Math.abs(lastZ - currentZ);
@@ -365,7 +357,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
         lastX = currentX;
         lastY = currentY;
         lastZ = currentZ;
-        lastInitialized = true;
+        sensorInitialized = true;
     }
 
     @Override
