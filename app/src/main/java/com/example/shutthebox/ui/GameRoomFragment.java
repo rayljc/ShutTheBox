@@ -20,7 +20,6 @@ import com.example.shutthebox.model.GameEntry;
 import com.example.shutthebox.model.Player;
 import com.example.shutthebox.model.Room;
 import com.example.shutthebox.model.WoodenCard;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -37,15 +36,15 @@ public class GameRoomFragment extends Fragment {
     private static final String GAME_ROOM_ID = "GAME_ROOM_ID";
     private static final String GAME_ENTRY_ID = "GAME_ENTRY_ID";
     private static final String GAME_ROOM_NO = "game_room_number";
+    private static final String PLAYER_ID = "player_id";
     private static final String USERS_COLLECTION = "users";
     private static final String ROOMS_COLLECTION = "rooms";
     private static final String GAMES_COLLECTION = "games";
     private boolean leaveButtonPressed = false;
-    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText;
+    private TextView playerOneNameText, playerTwoNameText, playerThreeNameText;
     private Player player;
     private String gameRoomNumber;
     FirebaseFirestore firebaseFirestore;
-    FirebaseAuth firebaseAuth;
 
     @Nullable
     @Override
@@ -59,26 +58,24 @@ public class GameRoomFragment extends Fragment {
         playerOneNameText = view.findViewById(R.id.gr_player1_name);
         playerTwoNameText = view.findViewById(R.id.gr_player2_name);
         playerThreeNameText = view.findViewById(R.id.gr_player3_name);
-        playerFourNameText = view.findViewById(R.id.gr_player4_name);
 
         Button startGameButton = view.findViewById(R.id.room_start_button);
         Button leaveRoomButton = view.findViewById(R.id.room_leave_button);
-        firebaseAuth = FirebaseAuth.getInstance();
         firebaseFirestore = FirebaseFirestore.getInstance();
-
-        // Get current user profile
-        firebaseFirestore.collection(USERS_COLLECTION).document(
-                firebaseAuth.getCurrentUser().getUid()
-        ).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult() != null) {
-                player = task.getResult().toObject(Player.class);
-            }
-        });
 
         // Room specific info
         gameRoomNumber = activity.getIntent().getExtras().getString(GAME_ROOM_NO, "");
         String welcomeToRoom = getString(R.string.welcome_text) + " " + gameRoomNumber;
         gameRoomNumberText.setText(welcomeToRoom);
+
+        // Get current user profile
+        final String playerID = activity.getIntent().getExtras().getString(PLAYER_ID, "");
+        firebaseFirestore.collection(USERS_COLLECTION).document(playerID).get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        player = task.getResult().toObject(Player.class);
+                    }
+                });
 
         // Initialize the room page using room_1 info
         final DocumentReference docRefRoom1 = firebaseFirestore.collection(ROOMS_COLLECTION).document("room_1");
@@ -88,14 +85,18 @@ public class GameRoomFragment extends Fragment {
                 assert room1 != null;
                 final List<Player> players = room1.getPlayers();
                 setPlayersNameOnView(players,
-                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText));
             }
         });
 
         // Add room_1 listener
         docRefRoom1.addSnapshotListener((value, error) -> {
+            if (leaveButtonPressed) {
+                return;
+            }
+
             if (error != null) {
-                Log.d(TAG, "Event listener for room 1 failed");
+                Log.d(TAG, "Event listener for room failed");
             }
 
             if (value != null && value.exists()) {
@@ -103,22 +104,19 @@ public class GameRoomFragment extends Fragment {
                 assert room1 != null;
                 final List<Player> players = room1.getPlayers();
                 final String gameEntryID = room1.getGameEntryID();
-
                 if (players.size() == 0) {
-                    if (leaveButtonPressed) {
-                        return;
-                    }
                     Intent intent = new Intent(activity.getApplicationContext(), Game.class);
                     intent.putExtra(GAME_ROOM_ID, 1);
                     intent.putExtra(GAME_ENTRY_ID, gameEntryID);
+                    intent.putExtra(PLAYER_ID, playerID);
                     startActivity(intent);
                 }
 
                 setPlayersNameOnView(players,
-                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText, playerFourNameText));
+                        Arrays.asList(playerOneNameText, playerTwoNameText, playerThreeNameText));
 
             } else {
-                Log.d(TAG, "Current room 1 data is null or not exists");
+                Log.d(TAG, "Current room data is null or not exists");
             }
         });
 
@@ -135,8 +133,8 @@ public class GameRoomFragment extends Fragment {
                 final Map<String, Object> map = new HashMap<>();
                 map.put("players", new ArrayList<>());
                 map.put("gameEntryID", gameEntryID);
-                docRefRoom1.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "updated success"))
-                        .addOnFailureListener(e -> Log.d(TAG, "updated failed"));
+                docRefRoom1.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "players and gameEntryID update succeeded"))
+                        .addOnFailureListener(e -> Log.d(TAG, "players and gameEntryID update failed"));
             }
         }));
 
@@ -161,7 +159,6 @@ public class GameRoomFragment extends Fragment {
 
         final GameEntry gameEntry = new GameEntry(id, woodenCards, 1, 6,
                 players, 0, null, gameRoomNumber);
-
         firebaseFirestore.collection(GAMES_COLLECTION).document(id).set(gameEntry);
 
         return id;
@@ -176,7 +173,7 @@ public class GameRoomFragment extends Fragment {
 
     private void setPlayersNameOnView(@NonNull final List<Player> players, @NonNull final List<TextView> textViews) {
         if (players.size() > textViews.size()) {
-            Log.d(TAG, "Too many players! Only at most 4 players can be in a game");
+            Log.d(TAG, "Too many players! Only at most 3 players can be in a game");
             return;
         }
 
@@ -185,7 +182,7 @@ public class GameRoomFragment extends Fragment {
             textViews.get(i).setVisibility(View.VISIBLE);
         }
 
-        for(int j = players.size(); j < textViews.size(); j++) {
+        for (int j = players.size(); j < textViews.size(); j++) {
             textViews.get(j).setVisibility(View.INVISIBLE);
         }
     }
@@ -204,8 +201,8 @@ public class GameRoomFragment extends Fragment {
                 final Map<String, Object> map = new HashMap<>();
                 map.put("players", players);
 
-                docRefRoom.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "update success"))
-                        .addOnFailureListener(e -> Log.d(TAG, "update fail"));
+                docRefRoom.update(map).addOnCompleteListener(task1 -> Log.d(TAG, "players update succeeded"))
+                        .addOnFailureListener(e -> Log.d(TAG, "players update failed"));
             }
         });
     }

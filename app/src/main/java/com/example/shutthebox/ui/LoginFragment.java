@@ -56,10 +56,10 @@ public class LoginFragment extends Fragment {
 
             firebaseAuth.signInWithEmailAndPassword(_email, _password).addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult() != null) {
-                    Log.d(TAG, "Login success");
+                    Log.d(TAG, "Login succeeded");
                     startActivity(new Intent(activity.getApplicationContext(), LobbyActivity.class));
                 } else {
-                    Log.d(TAG, "Login Failed: " + task.getException().getMessage());
+                    Log.d(TAG, "Login Failed: " + task.getException());
                     Toast.makeText(activity.getApplicationContext(), "Login failed! Please check your email and password", Toast.LENGTH_SHORT).show();
                 }
             });
