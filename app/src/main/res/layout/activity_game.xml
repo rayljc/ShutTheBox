@@ -170,7 +170,9 @@
         android:layout_marginTop="35dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -182,7 +184,9 @@
         android:layout_marginTop="15dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/game_player_name_one" />
 
@@ -194,7 +198,9 @@
         android:layout_marginTop="15dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/game_player_name_two" />
 

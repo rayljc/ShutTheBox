@@ -75,12 +75,12 @@ public class LobbyFragment extends Fragment {
             if (task.isSuccessful() && task.getResult() != null) {
                 final Room room1 = task.getResult().toObject(Room.class);
                 assert room1 != null;
-                final String gameName = "Game: " + room1.getGameName();
+//                final String gameName = "Game: " + room1.getGameName();
                 final List<Player> players = room1.getPlayers();
-                final String numberOfPlayersText = "Current Players: " + players.size();
-                final String statusText = room1.getAvailable() ? "Status: available" : "Status: unavailable";
+                final String numberOfPlayersText = getString(R.string.current_players) + " " + players.size();
+                final String statusText = room1.getAvailable() ? getString(R.string.status_available) : getString(R.string.status_unavailable);
                 roomAvailable = room1.getAvailable();
-                roomNameText.setText(gameName);
+//                roomNameText.setText(gameName);
                 roomAvailableText.setText(statusText);
                 roomCurrentPlayersText.setText(numberOfPlayersText);
             }

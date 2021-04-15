@@ -45,4 +45,6 @@
     <string name="leave">離開</string>
     <string name="start">開始</string>
     <string name="player_1_name">玩家一號</string>
+    <string name="status_unavailable">狀態: 不可加入</string>
+    <string name="current_players">目前人數:</string>
 </resources>

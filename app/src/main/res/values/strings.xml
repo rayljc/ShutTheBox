@@ -44,4 +44,6 @@
     <string name="roll_me">Roll me</string>
     <string name="add_string">Add</string>
     <string name="welcome_to_game_room_1">Welcome to game room 1</string>
+    <string name="status_unavailable">Status: unavailable</string>
+    <string name="current_players">Current Players:</string>
 </resources>
