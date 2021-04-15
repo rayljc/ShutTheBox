@@ -7,13 +7,14 @@
     tools:context=".Game">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/constraintLayout"
         android:layout_width="418dp"
         android:layout_height="307dp"
-        android:layout_marginBottom="52dp"
-        app:layout_constraintBottom_toTopOf="@+id/game_roll_dice_button"
+        android:layout_marginTop="10dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.571"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dice_image_view_2">
 
         <Button
             android:id="@+id/wooden_card_1"
@@ -136,30 +137,30 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="25dp"
-        android:layout_marginBottom="50dp"
+        android:layout_marginTop="10dp"
         android:text="@string/text_roll"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
     <Button
         android:id="@+id/game_finish_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="38dp"
-        android:layout_marginBottom="50dp"
+        android:layout_marginTop="10dp"
         android:text="@string/text_finish"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/game_roll_dice_button" />
+        app:layout_constraintStart_toEndOf="@+id/game_roll_dice_button"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
     <Button
         android:id="@+id/game_quit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="25dp"
-        android:layout_marginBottom="50dp"
         android:text="@string/text_quit"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
 
     <TextView
         android:id="@+id/game_player_name_one"
@@ -169,7 +170,9 @@
         android:layout_marginTop="35dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -181,7 +184,9 @@
         android:layout_marginTop="15dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/game_player_name_one" />
 
@@ -193,7 +198,9 @@
         android:layout_marginTop="15dp"
         android:text="@string/player_1_name"
         android:textAlignment="viewStart"
+        android:textColor="#000000"
         android:textSize="18sp"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/game_player_name_two" />
 

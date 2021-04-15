@@ -10,7 +10,7 @@
         android:id="@+id/end_of_game_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="30dp"
         android:text="@string/end_of_game"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -21,7 +21,7 @@
         android:id="@+id/push_up_time_for_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="39dp"
+        android:layout_marginTop="20dp"
         android:text="@string/push_up_time_for"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -32,7 +32,7 @@
         android:id="@+id/end_of_game_loser_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="9dp"
+        android:layout_marginTop="10dp"
         android:text="@string/player_1_name"
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -43,20 +43,20 @@
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="51dp"
+        android:layout_marginTop="20dp"
         android:contentDescription="@string/time_to_push_ups"
-        app:layout_constraintBottom_toTopOf="@+id/go_to_lobby_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/end_of_game_loser_name"
         app:srcCompat="@drawable/me_pushup" />
 
     <Button
         android:id="@+id/go_to_lobby_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="50dp"
-        android:layout_marginBottom="50dp"
+        android:layout_marginTop="20dp"
         android:text="@string/go_to_lobby"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imageView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

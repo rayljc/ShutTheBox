@@ -228,7 +228,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 .addOnFailureListener(e -> Log.d(TAG, "loser update failed"));
     }
 
-    private boolean checkResult(int diceOnePoint, int diceTwoPoint, @NonNull final List<Integer> currentMarkedCards) {
+    public boolean checkResult(int diceOnePoint, int diceTwoPoint, @NonNull final List<Integer> currentMarkedCards) {
         int sum = currentMarkedCards.stream().reduce(0, Integer::sum);
         return sum == diceOnePoint + diceTwoPoint;
     }
@@ -257,7 +257,7 @@ public class Game extends AppCompatActivity implements SensorEventListener {
                 .addOnFailureListener(e -> Log.d(TAG, "dice points update failed"));
     }
 
-    private int rollDice() {
+    public int rollDice() {
         return random.nextInt(6) + 1;
     }
 

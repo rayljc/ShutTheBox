@@ -53,8 +53,6 @@ public class GameRoomFragment extends Fragment {
 
         Activity activity = requireActivity();
 
-        TextView gameRoomNumberText = view.findViewById(R.id.game_room_number_text);
-
         playerOneNameText = view.findViewById(R.id.gr_player1_name);
         playerTwoNameText = view.findViewById(R.id.gr_player2_name);
         playerThreeNameText = view.findViewById(R.id.gr_player3_name);
@@ -65,8 +63,6 @@ public class GameRoomFragment extends Fragment {
 
         // Room specific info
         gameRoomNumber = activity.getIntent().getExtras().getString(GAME_ROOM_NO, "");
-        String welcomeToRoom = getString(R.string.welcome_text) + " " + gameRoomNumber;
-        gameRoomNumberText.setText(welcomeToRoom);
 
         // Get current user profile
         final String playerID = activity.getIntent().getExtras().getString(PLAYER_ID, "");
